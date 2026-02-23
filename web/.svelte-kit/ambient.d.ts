@@ -92,7 +92,6 @@ declare module '$env/static/private' {
 	export const npm_package_version: string;
 	export const npm_lifecycle_event: string;
 	export const npm_config_verify_deps_before_run: string;
-	export const NODE_PATH: string;
 	export const QT_ACCESSIBILITY: string;
 	export const GDMSESSION: string;
 	export const FUNCTIONS_CORE_TOOLS_TELEMETRY_OPTOUT: string;
@@ -212,7 +211,6 @@ declare module '$env/dynamic/private' {
 		npm_package_version: string;
 		npm_lifecycle_event: string;
 		npm_config_verify_deps_before_run: string;
-		NODE_PATH: string;
 		QT_ACCESSIBILITY: string;
 		GDMSESSION: string;
 		FUNCTIONS_CORE_TOOLS_TELEMETRY_OPTOUT: string;
