@@ -12,6 +12,40 @@
     function toggleMobile() {
         showMobile = !showMobile;
     }
+
+    /**
+     * @param {HTMLElement} node
+     * @param {{ title: string; placement?: string; }} params
+     */
+    function delayedTip(node, params) {
+        if(!params) return;
+
+        /** @type {Number} */
+        let tid;
+
+        function handleMouseEnter() {
+            tid = setTimeout(() => {
+                node.dataset.tooltip = params?.['title'];
+                node.dataset.placement = params?.['placement'] ?? 'right';
+            }, 1000);
+        }
+
+        function handleMouseLeave() {
+            clearTimeout(tid);
+            node.removeAttribute('data-tooltip');
+            node.removeAttribute('data-placement');
+        }
+
+        $effect(() => {
+            node.addEventListener('mouseenter', handleMouseEnter);
+            node.addEventListener('mouseleave', handleMouseLeave);
+
+            return () => {
+                node.removeEventListener('mouseenter', handleMouseEnter);
+                node.removeEventListener('mouseleave', handleMouseLeave);
+            };
+        });
+    }
 </script>
 
 <nav class="toggle">
@@ -40,13 +74,13 @@
     <nav>
         <ul>
             <li>hm</li>
-            <li><a href="#" data-tooltip="Files" data-placement="right">{@html icFiles}</a></li>
-            <li><a href="#" data-tooltip="Profile" data-placement="right">{@html icProfile}</a></li>
+            <li><a href="#" use:delayedTip={{ title: 'Files' }}>{@html icFiles}</a></li>
+            <li><a href="#" use:delayedTip={{ title: 'Profile' }}>{@html icProfile}</a></li>
         </ul>
 
         <ul>
-            <li><a href="#" data-tooltip="Settings" data-placement="right">{@html icSettings}</a></li>
-            <li><a href="#" data-tooltip="Sign out" data-placement="right">{@html icSignout}</a></li>
+            <li><a href="#" use:delayedTip={{ title: 'Settings' }}>{@html icSettings}</a></li>
+            <li><a href="#" use:delayedTip={{ title: 'Sign out' }}>{@html icSignout}</a></li>
         </ul>
     </nav>
 </aside>
