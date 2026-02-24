@@ -2,3 +2,13 @@
 /* To import only what you need from Pico [check the documentaion](https://picocss.com/docs/customization.html) */
 
 /* Write your global styles here, in SCSS syntax. Variables and mixins from the src/variables.scss file are available here without importing */
+
+button {
+    padding: 0.25rem 0.5rem;
+}
+
+body {
+    width: min(100dvw, 1536px);
+    height: 100dvh;
+    margin: auto;
+}

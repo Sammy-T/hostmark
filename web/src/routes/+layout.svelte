@@ -1,6 +1,7 @@
 <script>
 	import '../app.scss';
 	import favicon from '$lib/assets/favicon.svg';
+    import Menu from '$lib/components/Menu.svelte';
 
 	let { children } = $props();
 </script>
@@ -9,4 +10,7 @@
 	<link rel="icon" href={favicon} />
 </svelte:head>
 
-{@render children()}
+<Menu />
+<main>
+	{@render children()}
+</main>
