@@ -7,6 +7,16 @@
     import icSignout from '$lib/assets/logout.svg?raw';
     import { fade } from 'svelte/transition';
 
+    /**
+     * @typedef {Object} Props
+     * @property {import('svelte').Snippet} [children]
+     * @property {String} [current]
+     */
+
+    /** @type {Props} */
+    let { current } = $props();
+    // TODO: Set current based on location
+
     let showMobile = $state(false);
 
     function toggleMobile() {
@@ -74,13 +84,13 @@
     <nav>
         <ul>
             <li>hm</li>
-            <li><a href="#" use:delayedTip={{ title: 'Files' }}>{@html icFiles}</a></li>
-            <li><a href="#" use:delayedTip={{ title: 'Profile' }}>{@html icProfile}</a></li>
+            <li><a href="#" class:highlight={current === 'files'} use:delayedTip={{ title: 'Files' }}>{@html icFiles}</a></li>
+            <li><a href="#" class:highlight={current === 'profile'} use:delayedTip={{ title: 'Profile' }}>{@html icProfile}</a></li>
         </ul>
 
         <ul>
-            <li><a href="#" use:delayedTip={{ title: 'Settings' }}>{@html icSettings}</a></li>
-            <li><a href="#" use:delayedTip={{ title: 'Sign out' }}>{@html icSignout}</a></li>
+            <li><a href="#" class:highlight={current === 'settings'} use:delayedTip={{ title: 'Settings' }}>{@html icSettings}</a></li>
+            <li><a href="#" class:highlight={current === 'signout'} use:delayedTip={{ title: 'Sign out' }}>{@html icSignout}</a></li>
         </ul>
     </nav>
 </aside>
@@ -116,11 +126,18 @@
     }
 
     .toggle, .sidebar {
-        outline: 1px solid rgba(128, 128, 128, 0.485);
+        outline: 1px solid oklch(from var(--pico-contrast) l c h / 0.15);
     }
 
     .sidebar {
         display: none;
+
+        & a {
+            padding: 0.15rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
     }
 
     aside {
@@ -140,6 +157,10 @@
         top: 0;
         left: 0;
         background-color: oklch(from var(--pico-background-color) calc(l * 0.85) c h);
+    }
+
+    .highlight {
+        background-color: oklch(from var(--pico-contrast) l c h / 0.15);
     }
 
     @media (min-width: 768px) {
