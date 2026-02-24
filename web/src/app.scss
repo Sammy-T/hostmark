@@ -12,3 +12,9 @@ body {
     height: 100dvh;
     margin: auto;
 }
+
+@media (min-width: 768px) {
+    body {
+        display: flex;
+    }
+}
