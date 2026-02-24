@@ -5,7 +5,7 @@
     import icProfile from '$lib/assets/user-circle.svg?raw';
     import icSettings from '$lib/assets/settings.svg?raw';
     import icSignout from '$lib/assets/logout.svg?raw';
-    import { fade } from 'svelte/transition';
+    import Sidebar from './Sidebar.svelte';
 
     /**
      * @typedef {Object} Props
@@ -63,100 +63,50 @@
 </nav>
 
 {#if showMobile}
-<aside class="mobile" transition:fade>
-    <nav>
-        <ul>
-            <li><button onclick={toggleMobile}>{@html icClose}</button></li>
-            <li>hm</li>
-            <li><a href="#">{@html icFiles} Files</a></li>
-            <li><a href="#">{@html icProfile} Profile</a></li>
-        </ul>
-
-        <ul>
-            <li><a href="#">{@html icSettings} Settings</a></li>
-            <li><a href="#">{@html icSignout} Sign out</a></li>
-        </ul>
-    </nav>
-</aside>
+<Sidebar mobileOnly>
+    <ul>
+        <li><button onclick={toggleMobile}>{@html icClose}</button></li>
+        <li>hm</li>
+        <li><a href="#">{@html icFiles} Files</a></li>
+        <li><a href="#">{@html icProfile} Profile</a></li>
+    </ul>
+    
+    <ul>
+        <li><a href="#">{@html icSettings} Settings</a></li>
+        <li><a href="#">{@html icSignout} Sign out</a></li>
+    </ul>
+</Sidebar>
 {/if}
 
-<aside class="sidebar" transition:fade>
-    <nav>
-        <ul>
-            <li>hm</li>
-            <li><a href="#" class:highlight={current === 'files'} use:delayedTip={{ title: 'Files' }}>{@html icFiles}</a></li>
-            <li><a href="#" class:highlight={current === 'profile'} use:delayedTip={{ title: 'Profile' }}>{@html icProfile}</a></li>
-        </ul>
-
-        <ul>
-            <li><a href="#" class:highlight={current === 'settings'} use:delayedTip={{ title: 'Settings' }}>{@html icSettings}</a></li>
-            <li><a href="#" class:highlight={current === 'signout'} use:delayedTip={{ title: 'Sign out' }}>{@html icSignout}</a></li>
-        </ul>
-    </nav>
-</aside>
+<Sidebar desktopOnly>
+    <ul>
+        <li>hm</li>
+        <li><a href="#" class:highlight={current === 'files'} use:delayedTip={{ title: 'Files' }}>{@html icFiles}</a></li>
+        <li><a href="#" class:highlight={current === 'profile'} use:delayedTip={{ title: 'Profile' }}>{@html icProfile}</a></li>
+    </ul>
+    
+    <ul>
+        <li><a href="#" class:highlight={current === 'settings'} use:delayedTip={{ title: 'Settings' }}>{@html icSettings}</a></li>
+        <li><a href="#" class:highlight={current === 'signout'} use:delayedTip={{ title: 'Sign out' }}>{@html icSignout}</a></li>
+    </ul>
+</Sidebar>
 
 <style>
-    button {
-        padding: 0;
-        margin: 0;
-        background-color: transparent;
-        border: none;
-    }
-
-    button:hover {
-        color: var(--pico-primary);
-    }
-
-    a:hover {
-        text-decoration: none;
-    }
-
-    nav {
-        padding: 0.5rem;
-        margin: 0;
-
-        & *, & ul:first-of-type, & ul:last-of-type {
+    .toggle {
+        & button {
             padding: 0;
             margin: 0;
+            background-color: transparent;
+            border: none;
         }
 
-        & li {
-            padding: 0.5rem 0;
+        & button:hover {
+            color: var(--pico-primary);
         }
     }
 
-    .toggle, .sidebar {
+    .toggle {
         outline: 1px solid oklch(from var(--pico-contrast) l c h / 0.15);
-    }
-
-    .sidebar {
-        display: none;
-
-        & a {
-            padding: 0.15rem;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-    }
-
-    aside {
-        height: 100dvh;
-
-        & nav {
-            min-height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-    }
-
-    aside.mobile {
-        min-width: 10rem;
-        position: absolute;
-        top: 0;
-        left: 0;
-        background-color: oklch(from var(--pico-background-color) calc(l * 0.85) c h);
     }
 
     .highlight {
@@ -164,12 +114,8 @@
     }
 
     @media (min-width: 768px) {
-        .toggle, .mobile {
+        .toggle {
             display: none;
-        }
-
-        .sidebar {
-            display: revert-layer;
         }
     }
 </style>
