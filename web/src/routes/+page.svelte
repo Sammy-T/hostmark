@@ -1,9 +1,9 @@
 <script>
+    import FileBrowser from '$lib/components/FileBrowser.svelte';
+
     /** @type {import('./$types').PageProps} */
     let { data } = $props();
 </script>
-
-<!-- TODO: File nav -->
-<!-- TODO: File view/editor -->
  
-{@html data.content}
+<!-- {@html data.content} -->
+<FileBrowser />

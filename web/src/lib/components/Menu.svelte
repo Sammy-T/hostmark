@@ -5,7 +5,10 @@
     import icProfile from '$lib/assets/user-circle.svg?raw';
     import icSettings from '$lib/assets/settings.svg?raw';
     import icSignout from '$lib/assets/logout.svg?raw';
+    import icFolders from '$lib/assets/folders.svg?raw';
+    import icLibraryPlus from '$lib/assets/library-plus.svg?raw';
     import Sidebar from './Sidebar.svelte';
+    import { cbLibPlus, showFolderSidebar } from '$lib/util.svelte';
 
     /**
      * @typedef {Object} Props
@@ -58,11 +61,20 @@
     }
 </script>
 
+<!-- Mobile menu -->
 <nav class="toggle">
     <button onclick={toggleMobile}>{@html icMenu}</button>
+
+    <!-- TODO: Display addl items based on location -->
+    <!-- File page item(s) -->
+    <ul>
+        <li><button onclick={() => showFolderSidebar.value = !showFolderSidebar.value}>{@html icFolders}</button></li>
+        <li><button onclick={cbLibPlus.cb?.()}>{@html icLibraryPlus}</button></li>
+    </ul>
 </nav>
 
 {#if showMobile}
+<!-- Mobile page nav -->
 <Sidebar mobileOnly>
     <ul>
         <li><button onclick={toggleMobile}>{@html icClose}</button></li>
@@ -78,6 +90,7 @@
 </Sidebar>
 {/if}
 
+<!-- Desktop page nav -->
 <Sidebar desktopOnly>
     <ul>
         <li>hm</li>
@@ -93,6 +106,9 @@
 
 <style>
     .toggle {
+        padding: 0 0.5rem;
+        outline: 1px solid oklch(from var(--pico-contrast) l c h / 0.15);
+
         & button {
             padding: 0;
             margin: 0;
@@ -103,10 +119,6 @@
         & button:hover {
             color: var(--pico-primary);
         }
-    }
-
-    .toggle {
-        outline: 1px solid oklch(from var(--pico-contrast) l c h / 0.15);
     }
 
     .highlight {

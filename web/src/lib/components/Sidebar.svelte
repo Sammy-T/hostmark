@@ -36,6 +36,7 @@
 
     aside {
         height: 100dvh;
+        overflow: auto;
         background-color: oklch(from var(--pico-background-color) calc(l * 0.85) c h);
 
         & nav {
