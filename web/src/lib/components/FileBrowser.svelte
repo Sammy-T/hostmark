@@ -1,12 +1,11 @@
 <script>
+    import FileEditor from './file/FileEditor.svelte';
     import FileNav from './file/FileNav.svelte';
 </script>
 
 <div>
     <FileNav />
-
-    <!-- TODO: File view/editor -->
-    <section>Breadcrumb path<br/>File editor</section>
+    <FileEditor />
 </div>
 
 <style>
