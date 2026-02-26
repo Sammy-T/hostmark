@@ -2,13 +2,13 @@
 
 <form>
     <label for="username">Username</label>
-    <input id="username" name="username" type="text" placeholder="Username" />
+    <input id="username" name="username" type="text" placeholder="Username" required />
 
     <label for="password">Password</label>
-    <input id="password" name="password" type="password" placeholder="Password" />
+    <input id="password" name="password" type="password" placeholder="Password" required />
 
     <button type="submit">Sign in</button>
-    <small>Don't have an account yet? <a href="#">Sign up</a></small>
+    <small>Don't have an account? <a href="/signup">Sign up</a></small>
 </form>
 
 <style>
