@@ -1,23 +1,12 @@
 <script>
-	import '../app.scss';
-	import favicon from '$lib/assets/favicon.svg';
-    import Menu from '$lib/components/Menu.svelte';
+    import '../app.scss';
+    import favicon from '$lib/assets/favicon.svg';
 
-	let { children } = $props();
+    let { children } = $props();
 </script>
 
 <svelte:head>
 	<link rel="icon" href={favicon} />
 </svelte:head>
 
-<Menu />
-
-<main>
-	{@render children()}
-</main>
-
-<style>
-	main {
-		flex-grow: 1;
-	}
-</style>
+{@render children()}
