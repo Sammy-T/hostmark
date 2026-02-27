@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"log"
 	"net/http"
@@ -14,22 +15,29 @@ import (
 
 var dev bool
 
+type fileSys struct {
+	http.FileSystem
+}
+
+type PathEntry struct {
+	Name  string `json:"name"`
+	IsDir bool   `json:"isDir"`
+}
+
 func main() {
 	flag.BoolVar(&dev, "dev", false, "development mode")
 	flag.Parse()
 
+	cwDir, err := os.Getwd()
+	if err != nil {
+		log.Fatalf("Current working directory: %v", err)
+	}
+
 	if dev {
-		startDevServer("pnpm")
+		startDevServer("pnpm", cwDir)
 		http.Handle("/", createDevHandler())
 	} else {
 		buildSite("pnpm")
-
-		cwDir, err := os.Getwd()
-		if err != nil {
-			log.Fatalf("Current working directory: %v", err)
-		}
-
-		// http.Handle("/", http.FileServer(http.Dir(filepath.Join(cwDir, "/web/build"))))
 
 		fs := fileSys{http.Dir(filepath.Join(cwDir, "/web/build"))}
 
@@ -39,14 +47,42 @@ func main() {
 		})
 	}
 
+	http.HandleFunc("GET /dir/{path...}", handleDirPath(cwDir))
+
 	addr := ":3000"
 
 	log.Printf("Serving hostmark on %v", addr)
 	log.Fatal(http.ListenAndServe(addr, nil))
 }
 
-type fileSys struct {
-	http.FileSystem
+func handleDirPath(cwDir string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		dirPath := r.PathValue("path")
+
+		log.Printf("req %q %q", r.URL.String(), dirPath)
+
+		entries, err := os.ReadDir(filepath.Join(cwDir, ".files", dirPath))
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		var pathEntries []PathEntry
+
+		for _, entry := range entries {
+			p := PathEntry{
+				Name:  entry.Name(),
+				IsDir: entry.IsDir(),
+			}
+
+			pathEntries = append(pathEntries, p)
+		}
+
+		log.Print(pathEntries)
+
+		jsonBytes, err := json.Marshal(pathEntries)
+
+		w.Write(jsonBytes)
+	}
 }
 
 func (fs fileSys) Open(name string) (http.File, error) {
@@ -103,13 +139,8 @@ func buildSite(pkgManager string) {
 	}
 }
 
-func startDevServer(pkgManager string) {
+func startDevServer(pkgManager string, cwDir string) {
 	log.Println("Starting Vite dev server...")
-
-	cwDir, err := os.Getwd()
-	if err != nil {
-		log.Fatalf("Current working directory: %v", err)
-	}
 
 	cmdDir := filepath.Join(cwDir, "web")
 
@@ -118,12 +149,14 @@ func startDevServer(pkgManager string) {
 	cmdInst.Stdout = os.Stdout
 	cmdInst.Stderr = os.Stderr
 
+	var err error
+
 	// Run install and await
 	if err = cmdInst.Run(); err != nil {
 		if pkgManager != "npm" {
 			log.Printf("%v install failed: %v.\nFalling back to npm...", pkgManager, err)
 
-			startDevServer("npm")
+			startDevServer("npm", cwDir)
 			return
 		}
 
@@ -179,9 +212,6 @@ func createDevHandler() http.Handler {
 		Rewrite:      rewrite,
 		ErrorHandler: errHandler,
 	}
-
-	// proxy := httputil.NewSingleHostReverseProxy(devUrl)
-	// proxy.ErrorHandler = errHandler
 
 	return proxy
 }

@@ -1,7 +1,31 @@
 <script>
     import Sidebar from '../Sidebar.svelte';
     import { cbLibPlus, showFolderSidebar } from '$lib/util.svelte';
-    import { onMount } from 'svelte';
+    import { getContext, onMount } from 'svelte';
+
+    /** @type {{ value: string }} */
+    let directory = getContext('directory');
+
+    // @ts-ignore
+    let entries = $state([]);
+
+    $effect(() => {
+        load(directory.value);
+    });
+
+    /**
+     * @param {string} dir
+     */
+    async function load(dir) {
+        const resp = await fetch(`/dir/${dir}`);
+        if(!resp.ok) {
+            console.error('unable to load directory');
+            return;
+        }
+
+        entries = await resp.json();
+        console.log($state.snapshot(entries));
+    }
 
     function addFile() {
         console.log('add file');
@@ -28,10 +52,11 @@
 <aside>
     <nav>
         <ul>
+            <li><a href="#">&lt;home&gt;</a></li>
             <li><a href="#">..</a></li>
 
-            {#each { length: 5 } as _, i}
-                <li><a href="#">file-{i + 1}</a></li>
+            {#each entries as entry}
+                <li><a href="#">{entry.name}{entry.isDir ? '/' : ''}</a></li>
             {/each}
         </ul>
     </nav>
