@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"net/http"
 	"net/http/httputil"
@@ -8,16 +9,98 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 )
 
+var dev bool
+
 func main() {
-	startDevServer("pnpm")
-	http.Handle("/", createDevHandler())
+	flag.BoolVar(&dev, "dev", false, "development mode")
+	flag.Parse()
+
+	if dev {
+		startDevServer("pnpm")
+		http.Handle("/", createDevHandler())
+	} else {
+		buildSite("pnpm")
+
+		cwDir, err := os.Getwd()
+		if err != nil {
+			log.Fatalf("Current working directory: %v", err)
+		}
+
+		// http.Handle("/", http.FileServer(http.Dir(filepath.Join(cwDir, "/web/build"))))
+
+		fs := fileSys{http.Dir(filepath.Join(cwDir, "/web/build"))}
+
+		http.Handle("/", http.FileServer(fs))
+		http.HandleFunc("/auth", func(w http.ResponseWriter, r *http.Request) {
+			http.ServeFile(w, r, filepath.Join(cwDir, "/web/build/login.html"))
+		})
+	}
 
 	addr := ":3000"
 
 	log.Printf("Serving hostmark on %v", addr)
 	log.Fatal(http.ListenAndServe(addr, nil))
+}
+
+type fileSys struct {
+	http.FileSystem
+}
+
+func (fs fileSys) Open(name string) (http.File, error) {
+	// log.Printf("file %q", name)
+
+	re := regexp.MustCompile(`\/[\w\-]+$`)
+
+	// Attempt to open an html file matching the directory.
+	// i.e. /hello => /hello.html
+	//
+	// By default, Go's FileServer supports directories containing index.html files.
+	// See: https://pkg.go.dev/net/http@go1.26.0#FileServer
+	if re.MatchString(name) {
+		htmlName := name + ".html"
+		log.Printf("%q => %q", name, htmlName)
+
+		file, err := fs.FileSystem.Open(htmlName)
+		if err != nil {
+			log.Printf("file %q: %v", htmlName, err)
+		} else {
+			return file, nil
+		}
+	}
+
+	file, err := fs.FileSystem.Open(name)
+	if err != nil {
+		log.Printf("file %q: %v", name, err)
+		return nil, err
+	}
+
+	return file, nil
+}
+
+func buildSite(pkgManager string) {
+	cwDir, err := os.Getwd()
+	if err != nil {
+		log.Fatalf("Current working directory: %v", err)
+	}
+
+	cmdDir := filepath.Join(cwDir, "web")
+
+	cmdBuild := exec.Command(pkgManager, "run", "build")
+	cmdBuild.Dir = cmdDir
+	cmdBuild.Stdout = os.Stdout
+	cmdBuild.Stderr = os.Stderr
+
+	// Run build and await
+	if err = cmdBuild.Run(); err != nil {
+		if pkgManager != "npm" {
+			log.Printf("%v build failed: %v.\nFalling back to npm...", pkgManager, err)
+
+			buildSite("npm")
+		}
+	}
 }
 
 func startDevServer(pkgManager string) {
