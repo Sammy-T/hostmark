@@ -47,7 +47,7 @@ func main() {
 		})
 	}
 
-	http.HandleFunc("GET /dir/{path...}", handleDirPath(cwDir))
+	http.HandleFunc("GET /api/dir/{path...}", handleDirPath(cwDir))
 
 	addr := ":3000"
 
@@ -77,7 +77,7 @@ func handleDirPath(cwDir string) http.HandlerFunc {
 			pathEntries = append(pathEntries, p)
 		}
 
-		log.Print(pathEntries)
+		// log.Print(pathEntries)
 
 		jsonBytes, err := json.Marshal(pathEntries)
 

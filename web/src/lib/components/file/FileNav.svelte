@@ -17,7 +17,7 @@
      * @param {string} dir
      */
     async function load(dir) {
-        const resp = await fetch(`/dir/${dir}`);
+        const resp = await fetch(`/api/dir/${dir}`);
         if(!resp.ok) {
             console.error('unable to load directory');
             return;
