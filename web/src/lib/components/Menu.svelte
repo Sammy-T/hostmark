@@ -9,16 +9,9 @@
     import icLibraryPlus from '$lib/assets/library-plus.svg?raw';
     import Sidebar from './Sidebar.svelte';
     import { cbLibPlus, showFolderSidebar } from '$lib/util.svelte';
+    import { page } from '$app/state';
 
-    /**
-     * @typedef {Object} Props
-     * @property {import('svelte').Snippet} [children]
-     * @property {String} [current]
-     */
-
-    /** @type {Props} */
-    let { current } = $props();
-    // TODO: Set current based on location
+    let current = $derived((page.url.pathname === '/') ? 'file' : page.url.pathname.split('/').filter((v) => v !== '').at(0));
 
     let showMobile = $state(false);
 
@@ -79,7 +72,7 @@
     <ul>
         <li><button onclick={toggleMobile}>{@html icClose}</button></li>
         <li>hm</li>
-        <li><a href="#">{@html icFiles} Files</a></li>
+        <li><a href="/">{@html icFiles} Files</a></li>
         <li><a href="#">{@html icProfile} Profile</a></li>
     </ul>
     
@@ -94,7 +87,7 @@
 <Sidebar desktopOnly>
     <ul>
         <li>hm</li>
-        <li><a href="#" class:highlight={current === 'files'} use:delayedTip={{ title: 'Files' }}>{@html icFiles}</a></li>
+        <li><a href="/" class:highlight={current === 'file'} use:delayedTip={{ title: 'Files' }}>{@html icFiles}</a></li>
         <li><a href="#" class:highlight={current === 'profile'} use:delayedTip={{ title: 'Profile' }}>{@html icProfile}</a></li>
     </ul>
     
