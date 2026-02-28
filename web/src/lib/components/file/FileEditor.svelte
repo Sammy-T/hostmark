@@ -5,7 +5,7 @@
     const content = getContext('content');
 </script>
 
-<section>{@html content.html}</section>
+<section>{@html content?.html}</section>
 
 <style>
     section {

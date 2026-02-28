@@ -1,7 +1,9 @@
 <script>
-    import { setContext } from 'svelte';
+    import { getContext, setContext } from 'svelte';
     import FileEditor from './file/FileEditor.svelte';
     import FileNav from './file/FileNav.svelte';
+
+    let file = getContext('file');
 
     let directory = $state({ value: '' });
     setContext('directory', directory);
@@ -11,7 +13,10 @@
     <FileNav />
 
     <div class="file-view">
-        <header>todo/breadcrumb/path</header>
+        {#if file}
+            <header>{file.value}</header>
+        {/if}
+
         <FileEditor />
     </div>
 </div>

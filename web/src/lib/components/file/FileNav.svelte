@@ -42,10 +42,7 @@
         const hrefPath = anchor.href.replace(/https?:\/\//, '').replace(`${location.host}/`, '')
         console.log(hrefPath);
 
-        if(hrefPath.startsWith('file/')) {
-            ev.preventDefault(); //// TODO: TEMP
-            return;
-        }
+        if(hrefPath.startsWith('file/')) return;
 
         ev.preventDefault();
 
@@ -83,12 +80,12 @@
 {#if showFolderSidebar.value}
 <Sidebar mobileOnly>
     <ul>
-        {@render pathEntry('#[home]', '[home]')}
-        {@render pathEntry('#[back]', '..')}
-        {@render pathEntry('#[new]', '+new file')}
+        {@render pathEntry('/#[home]', '[home]')}
+        {@render pathEntry('/#[back]', '..')}
+        {@render pathEntry('/#[new]', '+new file')}
 
         {#each entries as entry}
-            {@const type = (entry.isDir) ? '' : 'file'}
+            {@const type = (entry.isDir) ? '' : '/file'}
             {@const href = (directory.value) ? [type, directory.value, entry.name].join('/') : [type, entry.name].join('/')}
 
             {@render pathEntry(href, `${entry.name}${entry.isDir ? '/' : ''}`)}
@@ -100,12 +97,12 @@
 <aside>
     <nav>
         <ul>
-            {@render pathEntry('#[home]', '[home]')}
-            {@render pathEntry('#[back]', '..')}
-            {@render pathEntry('#[new]', '+new file')}
+            {@render pathEntry('/#[home]', '[home]')}
+            {@render pathEntry('/#[back]', '..')}
+            {@render pathEntry('/#[new]', '+new file')}
 
             {#each entries as entry}
-                {@const type = (entry.isDir) ? '' : 'file'}
+                {@const type = (entry.isDir) ? '' : '/file'}
                 {@const href = (directory.value) ? [type, directory.value, entry.name].join('/') : [type, entry.name].join('/')}
 
                 {@render pathEntry(href, `${entry.name}${entry.isDir ? '/' : ''}`)}
