@@ -31,32 +31,84 @@
         console.log('add file');
     }
 
+    /**
+     * @param {Event} ev
+     */
+    function onEntryClick(ev) {
+        /** @type {HTMLAnchorElement} */
+        // @ts-ignore
+        const anchor = ev.target;
+
+        const hrefPath = anchor.href.replace(/https?:\/\//, '').replace(`${location.host}/`, '')
+        console.log(hrefPath);
+
+        if(hrefPath.startsWith('file/')) {
+            ev.preventDefault(); //// TODO: TEMP
+            return;
+        }
+
+        ev.preventDefault();
+
+        let newPath;
+
+        switch(hrefPath) {
+            case '#[home]':
+                directory.value = '';
+                break;
+
+            case '#[back]':
+                newPath = directory.value.split('/').slice(0, -1).filter(v => v !== '').join('/');
+                directory.value = newPath;
+                break;
+
+            case '#[new]':
+                addFile();
+                break;
+            default:
+                newPath = [...directory.value.split('/').filter(v => v !== ''), hrefPath.split('/').at(-1)].join('/');
+                directory.value = newPath;
+        }
+    }
+
     onMount(() => {
         cbLibPlus.cb = addFile;
     });
 </script>
 
+{#snippet pathEntry(/** @type {string} */ href, /** @type {string} */ title)}
+    <li><a {href} onclick={onEntryClick}>{title}</a></li>
+{/snippet}
+
 <!-- Mobile file nav -->
 {#if showFolderSidebar.value}
 <Sidebar mobileOnly>
     <ul>
-        <li><a href="#">..</a></li>
-        
-        {#each { length: 5 } as _, i}
-            <li><a href="#">file-{i + 1}</a></li>
+        {@render pathEntry('#[home]', '[home]')}
+        {@render pathEntry('#[back]', '..')}
+        {@render pathEntry('#[new]', '+new file')}
+
+        {#each entries as entry}
+            {@const type = (entry.isDir) ? '' : 'file'}
+            {@const href = (directory.value) ? [type, directory.value, entry.name].join('/') : [type, entry.name].join('/')}
+
+            {@render pathEntry(href, `${entry.name}${entry.isDir ? '/' : ''}`)}
         {/each}
-    </ul>
+</ul>
 </Sidebar>
 {/if}
 
 <aside>
     <nav>
         <ul>
-            <li><a href="#">&lt;home&gt;</a></li>
-            <li><a href="#">..</a></li>
+            {@render pathEntry('#[home]', '[home]')}
+            {@render pathEntry('#[back]', '..')}
+            {@render pathEntry('#[new]', '+new file')}
 
             {#each entries as entry}
-                <li><a href="#">{entry.name}{entry.isDir ? '/' : ''}</a></li>
+                {@const type = (entry.isDir) ? '' : 'file'}
+                {@const href = (directory.value) ? [type, directory.value, entry.name].join('/') : [type, entry.name].join('/')}
+
+                {@render pathEntry(href, `${entry.name}${entry.isDir ? '/' : ''}`)}
             {/each}
         </ul>
     </nav>

@@ -63,7 +63,7 @@ func handleDirPath(cwDir string) http.HandlerFunc {
 
 		entries, err := os.ReadDir(filepath.Join(cwDir, ".files", dirPath))
 		if err != nil {
-			log.Fatal(err)
+			log.Printf("read dir: %v", err)
 		}
 
 		var pathEntries []PathEntry
