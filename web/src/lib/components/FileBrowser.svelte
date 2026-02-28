@@ -7,13 +7,29 @@
     setContext('directory', directory);
 </script>
 
-<div>
+<div class="browser">
     <FileNav />
-    <FileEditor />
+
+    <div class="file-view">
+        <header>todo/breadcrumb/path</header>
+        <FileEditor />
+    </div>
 </div>
 
 <style>
-    div {
+    .browser {
         display: flex;
+    }
+
+    .file-view {
+        height: 100dvh;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+
+        & header {
+            padding: 0.5rem;
+            outline: 1px solid oklch(from var(--pico-contrast) l c h / 0.15);
+        }
     }
 </style>

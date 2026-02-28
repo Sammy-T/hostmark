@@ -5,27 +5,13 @@
     const content = getContext('content');
 </script>
 
-<div>
-    <header>todo/breadcrumb/path</header>
-    <section>{@html content.html}</section>
-</div>
+<section>{@html content.html}</section>
 
 <style>
-    div {
-        height: 100dvh;
+    section {
         flex-grow: 1;
+        padding: 0.5rem;
+        margin: 0;
         overflow: auto;
-
-        & > * {
-            padding: 0.5rem;
-        }
-
-        & header {
-            outline: 1px solid oklch(from var(--pico-contrast) l c h / 0.15);
-        }
-
-        & section {
-            margin: 0;
-        }
     }
 </style>
