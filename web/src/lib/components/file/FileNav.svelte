@@ -79,7 +79,7 @@
 <!-- Mobile file nav -->
 {#if showFolderSidebar.value}
 <Sidebar mobileOnly>
-    <ul>
+    <ul data-sveltekit-preload-data="off">
         {@render pathEntry('/#[home]', '[home]')}
         {@render pathEntry('/#[back]', '..')}
         {@render pathEntry('/#[new]', '+new file')}
@@ -96,7 +96,7 @@
 
 <aside>
     <nav>
-        <ul>
+        <ul data-sveltekit-preload-data="off">
             {@render pathEntry('/#[home]', '[home]')}
             {@render pathEntry('/#[back]', '..')}
             {@render pathEntry('/#[new]', '+new file')}
