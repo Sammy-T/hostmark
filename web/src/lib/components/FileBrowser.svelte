@@ -1,9 +1,10 @@
 <script>
-    import { getContext, setContext } from 'svelte';
+    import { setContext } from 'svelte';
     import FileEditor from './file/FileEditor.svelte';
     import FileNav from './file/FileNav.svelte';
+    import { page } from '$app/state';
 
-    let file = getContext('file');
+    let file = $derived(page.params.file);
 
     let directory = $state({ value: '' });
     setContext('directory', directory);
@@ -14,7 +15,7 @@
 
     <div class="file-view">
         {#if file}
-            <header>{file.value}</header>
+            <header>{file}</header>
         {/if}
 
         <FileEditor />

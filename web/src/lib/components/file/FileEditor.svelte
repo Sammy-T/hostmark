@@ -1,8 +1,7 @@
 <script>
-    import { getContext } from 'svelte';
+    import { page } from '$app/state';
 
-    /** @type {{ markdown: string, html: string }} */
-    const content = getContext('content');
+    let content = $derived(page.data.content);
 </script>
 
 <section>{@html content?.html}</section>

@@ -48,6 +48,7 @@ func main() {
 	}
 
 	http.HandleFunc("GET /api/dir/{path...}", handleDirPath(cwDir))
+	http.HandleFunc("GET /api/file/{path...}", handleFilePath(cwDir))
 
 	addr := ":3000"
 
@@ -57,13 +58,15 @@ func main() {
 
 func handleDirPath(cwDir string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		dirPath := r.PathValue("path")
+		urlPath := r.PathValue("path")
 
-		log.Printf("req %q %q", r.URL.String(), dirPath)
+		log.Printf("req %q %q", r.URL.String(), urlPath)
 
-		entries, err := os.ReadDir(filepath.Join(cwDir, ".files", dirPath))
+		entries, err := os.ReadDir(filepath.Join(cwDir, ".files", urlPath))
 		if err != nil {
 			log.Printf("read dir: %v", err)
+			http.Error(w, "unable to read directory", 500)
+			return
 		}
 
 		var pathEntries []PathEntry
@@ -77,11 +80,25 @@ func handleDirPath(cwDir string) http.HandlerFunc {
 			pathEntries = append(pathEntries, p)
 		}
 
-		// log.Print(pathEntries)
-
 		jsonBytes, err := json.Marshal(pathEntries)
-
 		w.Write(jsonBytes)
+	}
+}
+
+func handleFilePath(cwDir string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		urlPath := r.PathValue("path")
+
+		log.Printf("req %q %q", r.URL.String(), urlPath)
+
+		data, err := os.ReadFile(filepath.Join(cwDir, ".files", urlPath))
+		if err != nil {
+			log.Printf("read file: %v", err)
+			http.Error(w, "unable to read file", 500)
+			return
+		}
+
+		w.Write(data)
 	}
 }
 
