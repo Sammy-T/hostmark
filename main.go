@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"flag"
+	"io"
 	"log"
 	"net/http"
 	"net/http/httputil"
@@ -49,6 +50,7 @@ func main() {
 
 	http.HandleFunc("GET /api/dir/{path...}", handleDirPath(cwDir))
 	http.HandleFunc("GET /api/file/{path...}", handleFilePath(cwDir))
+	http.HandleFunc("POST /api/file/{path...}", handlePostPath(cwDir))
 
 	addr := ":3000"
 
@@ -60,7 +62,7 @@ func handleDirPath(cwDir string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		urlPath := r.PathValue("path")
 
-		log.Printf("req %q %q", r.URL.String(), urlPath)
+		log.Printf("%v %q %q", r.Method, r.URL.String(), urlPath)
 
 		entries, err := os.ReadDir(filepath.Join(cwDir, ".files", urlPath))
 		if err != nil {
@@ -89,7 +91,7 @@ func handleFilePath(cwDir string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		urlPath := r.PathValue("path")
 
-		log.Printf("req %q %q", r.URL.String(), urlPath)
+		log.Printf("%v %q %q", r.Method, r.URL.String(), urlPath)
 
 		data, err := os.ReadFile(filepath.Join(cwDir, ".files", urlPath))
 		if err != nil {
@@ -99,6 +101,32 @@ func handleFilePath(cwDir string) http.HandlerFunc {
 		}
 
 		w.Write(data)
+	}
+}
+
+func handlePostPath(cwDir string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		urlPath := r.PathValue("path")
+
+		log.Printf("%v %q %q", r.Method, r.URL.String(), urlPath)
+
+		body, err := io.ReadAll(r.Body)
+		r.Body.Close()
+
+		if err != nil {
+			log.Printf("read req body: %v", err)
+			http.Error(w, "unable to read body", 500)
+			return
+		}
+
+		p := filepath.Join(cwDir, ".files", urlPath)
+
+		err = os.WriteFile(p, body, 0664)
+		if err != nil {
+			log.Printf("write file: %v", err)
+			http.Error(w, "unable to write file", 500)
+			return
+		}
 	}
 }
 
