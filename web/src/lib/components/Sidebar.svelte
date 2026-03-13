@@ -12,26 +12,28 @@
     let { children, mobileOnly = false, desktopOnly = false } = $props();
 </script>
 
-<aside class:mobile={mobileOnly} class:desktop={desktopOnly} transition:fade>
+<aside class="sidebar" class:mobile={mobileOnly} class:desktop={desktopOnly} transition:fade>
     <nav>
         {@render children()}
     </nav>
 </aside>
 
 <style>
-    :global(button) {
-        padding: 0;
-        margin: 0;
-        background-color: transparent;
-        border: none;
-    }
+    .sidebar {
+        :global(button) {
+            padding: 0;
+            margin: 0;
+            background-color: transparent;
+            border: none;
+        }
 
-    :global(button:hover) {
-        color: var(--pico-primary);
-    }
+        :global(button:hover) {
+            color: var(--pico-primary);
+        }
 
-    :global(a:hover) {
-        text-decoration: none;
+        :global(a:hover) {
+            text-decoration: none;
+        }
     }
 
     aside {

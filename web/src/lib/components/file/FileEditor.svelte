@@ -29,10 +29,15 @@
 
         refreshAll();
     }
+
+    function finish() {
+        editing.value = false;
+    }
 </script>
 
 {#if editing.value}
-    <textarea bind:value={edited}></textarea>
+    <textarea name="editor" bind:value={edited}></textarea>
+    <button class="secondary" onclick={finish}>finish</button>
 {:else}
     <section>{@html content?.html}</section>
 {/if}
@@ -49,5 +54,7 @@
         flex-grow: 1;
         padding: 0.5rem;
         margin: 0;
+        border: 1px solid oklch(from var(--pico-contrast) l c h / 0.15);
+        box-shadow: none;
     }
 </style>

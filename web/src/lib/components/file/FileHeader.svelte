@@ -44,6 +44,17 @@
 </div>
 
 <style>
+    button {
+        margin: 0;
+        padding: 0;
+        background-color: transparent;
+        border: none;
+    }
+
+    button:hover {
+        background-color: oklch(from var(--pico-contrast) l c h / 0.05);
+    }
+
     header {
         padding: 0.5rem;
         outline: 1px solid oklch(from var(--pico-contrast) l c h / 0.15);
