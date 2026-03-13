@@ -1,13 +1,18 @@
 <script>
-    import { refreshAll } from '$app/navigation';
     import { page } from '$app/state';
+    import { refreshAll } from '$app/navigation';
+    import { getContext } from 'svelte';
 
     let content = $derived(page.data.content);
 
-    let editing = $state(false);
-    let edited = $state();
+    /** @type {{ value: boolean }}*/
+    const editing = getContext('editing');
 
-    let lastClick = 0;
+    let edited = $derived(content?.markdown);
+
+    $effect(() => {
+        if(!editing.value && content?.markdown !== edited) submitChanges();
+    });
 
     async function submitChanges() {
         /** @type {RequestInit} */
@@ -24,32 +29,12 @@
 
         refreshAll();
     }
-
-    function onDoubleClick() {
-        editing = !editing;
-
-        if(editing) return;
-
-        console.log(content?.markdown === edited, edited);
-
-        if(content?.markdown !== edited) submitChanges();
-    }
-
-    function onClick() {
-        const clickTime = new Date().getTime();
-
-        if(clickTime - lastClick < 250) onDoubleClick();
-
-        lastClick = clickTime;
-    }
 </script>
 
-{#if editing}
-    <textarea onclick={onClick} bind:value={edited}>{content?.markdown}</textarea>
+{#if editing.value}
+    <textarea bind:value={edited}></textarea>
 {:else}
-    <!-- svelte-ignore a11y_click_events_have_key_events -->
-    <!-- svelte-ignore a11y_no_static_element_interactions -->
-    <section onclick={onClick}>{@html content?.html}</section>
+    <section>{@html content?.html}</section>
 {/if}
 
 <style>

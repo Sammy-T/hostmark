@@ -1,13 +1,17 @@
 <script>
-    import { setContext } from 'svelte';
-    import FileEditor from './file/FileEditor.svelte';
     import FileNav from './file/FileNav.svelte';
+    import FileHeader from './file/FileHeader.svelte';
+    import FileEditor from './file/FileEditor.svelte';
+    import { setContext } from 'svelte';
     import { page } from '$app/state';
 
     let file = $derived(page.params.file);
 
     let directory = $state({ value: '' });
     setContext('directory', directory);
+
+    let editing = $state({ value: false });
+    setContext('editing', editing);
 </script>
 
 <div class="browser">
@@ -15,7 +19,7 @@
 
     <div class="file-view">
         {#if file}
-            <header>{file}</header>
+            <FileHeader />
         {/if}
 
         <FileEditor />
@@ -32,10 +36,5 @@
         flex-grow: 1;
         display: flex;
         flex-direction: column;
-
-        & header {
-            padding: 0.5rem;
-            outline: 1px solid oklch(from var(--pico-contrast) l c h / 0.15);
-        }
     }
 </style>
