@@ -1,45 +1,23 @@
 <script>
-    import { page } from '$app/state';
-    import { refreshAll } from '$app/navigation';
     import { getContext } from 'svelte';
 
-    let content = $derived(page.data.content);
+    /**
+     * @typedef {Object} Props
+     * @property {String} html The value of the html content
+     * @property {String} [edited] The working value of the markdown content
+     */
+
+    /** @type {Props} */
+    let { html, edited = $bindable() } = $props();
 
     /** @type {{ value: boolean }}*/
     const editing = getContext('editing');
-
-    let edited = $derived(content?.markdown);
-
-    $effect(() => {
-        if(!editing.value && content?.markdown !== edited) submitChanges();
-    });
-
-    async function submitChanges() {
-        /** @type {RequestInit} */
-        const opts = {
-            method: 'POST',
-            body: edited,
-        };
-
-        const resp = await fetch(`/api/file/${page.params.file}`, opts);
-        if(!resp.ok) {
-            console.error('unable to post changes');
-            return;
-        }
-
-        refreshAll();
-    }
-
-    function finish() {
-        editing.value = false;
-    }
 </script>
 
 {#if editing.value}
     <textarea name="editor" bind:value={edited}></textarea>
-    <button class="secondary" onclick={finish}>finish</button>
 {:else}
-    <section>{@html content?.html}</section>
+    <section>{@html html}</section>
 {/if}
 
 <style>
