@@ -4,7 +4,7 @@
     import FileEditor from './file/FileEditor.svelte';
     import { setContext } from 'svelte';
     import { page } from '$app/state';
-    import { refreshAll } from '$app/navigation';
+    import { goto, refreshAll } from '$app/navigation';
 
     let file = $derived(page.params.file);
     let content = $derived(page.data.content);
@@ -18,44 +18,82 @@
     let editing = $state({ value: false });
     setContext('editing', editing);
 
+    let editedFile = $derived(file);
     let edited = $derived(content?.markdown);
+    let addingFile = $state(false);
 
     $effect(() => {
-        if(!editing.value && content?.markdown !== edited) submitChanges();
+        if(naming.value || editing.value || (editedFile === file && edited === content?.markdown)) return;
+        submitChanges();
     });
 
-    async function submitChanges() {
+    function addFile() {
+        editedFile = (directory.value.length > 0) ? directory.value + '/' : directory.value;
+        edited = '';
+
+        addingFile = true;
+        naming.value = true;
+        editing.value = true;
+    }
+
+    /**
+     * @param {String} path 
+     * @param {'PUT' | 'PATCH' | 'DELETE'} method
+     * @param {String?} body
+     */
+    async function requestChange(path, method, body = null) {
         /** @type {RequestInit} */
         const opts = {
-            method: 'POST',
-            body: edited,
+            method,
         };
 
-        const resp = await fetch(`/api/file/${page.params.file}`, opts);
+        if(body) opts.body = body;
+
+        const resp = await fetch(path, opts);
         if(!resp.ok) {
-            console.error('unable to post changes');
-            return;
+            console.error('unable to submit changes');
+            return false;
         }
 
-        refreshAll();
+        return true;
+    }
+
+    async function submitChanges() {
+        if(editedFile !== file) {
+            const created = await requestChange(`/api/file/${editedFile}`, 'PUT', edited);
+            if(!created) return;
+            
+            if(addingFile) {
+                addingFile = false;
+            } else {
+                await requestChange(`/api/file/${file}`, 'DELETE');
+            }
+
+            goto(`/file/${editedFile}`);
+        } else {
+            await requestChange(`/api/file/${file}`, 'PATCH', edited);
+
+            refreshAll();
+        }
     }
 
     function finish() {
+        naming.value = false;
         editing.value = false;
     }
 </script>
 
 <div class="browser">
-    <FileNav />
+    <FileNav onaddfile={addFile} />
 
     <div class="file-view">
         {#if file}
-            <FileHeader />
+            <FileHeader bind:editedFile />
         {/if}
 
         <FileEditor html={content?.html} bind:edited />
 
-        {#if editing.value}
+        {#if naming.value || editing.value}
             <button class="secondary" onclick={finish}>finish</button>
         {/if}
     </div>

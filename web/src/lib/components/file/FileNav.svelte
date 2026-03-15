@@ -3,6 +3,18 @@
     import { cbLibPlus, showFolderSidebar } from '$lib/util.svelte';
     import { getContext, onMount } from 'svelte';
 
+    /**
+     * @callback onAddFile
+     */
+
+    /**
+     * @typedef {Object} Props
+     * @property {onAddFile} [onaddfile]
+     */
+
+    /** @type {Props} */
+    let { onaddfile } = $props();
+
     /** @type {{ value: string }} */
     let directory = getContext('directory');
 
@@ -25,10 +37,6 @@
 
         entries = await resp.json();
         console.log($state.snapshot(entries));
-    }
-
-    function addFile() {
-        console.log('add file');
     }
 
     /**
@@ -59,7 +67,7 @@
                 break;
 
             case '#[new]':
-                addFile();
+                onaddfile?.();
                 break;
             default:
                 newPath = [...directory.value.split('/').filter(v => v !== ''), hrefPath.split('/').at(-1)].join('/');
@@ -68,13 +76,15 @@
     }
 
     onMount(() => {
-        cbLibPlus.cb = addFile;
+        if(onaddfile) cbLibPlus.cb = onaddfile;
     });
 </script>
 
 {#snippet pathEntry(/** @type {string} */ href, /** @type {string} */ title)}
     <li><a {href} onclick={onEntryClick}>{title}</a></li>
 {/snippet}
+
+<!-- TODO: Make sure component updates when adding a file. -->
 
 <!-- Mobile file nav -->
 {#if showFolderSidebar.value}

@@ -5,10 +5,21 @@
     import { page } from '$app/state';
     import { getContext } from 'svelte';
 
+    /**
+     * @typedef {Object} Props
+     * @property {String} [editedFile]
+     */
+
+    /** @type {Props} */
+    let { editedFile = $bindable() } = $props();
+
     let file = $derived(page.params.file);
 
     /** @type {{ value: boolean }} */
     const editing = getContext('editing');
+
+    /** @type {{ value: boolean }} */
+    const naming = getContext('naming');
 
     /**
      * @param {MouseEvent} ev
@@ -22,6 +33,10 @@
                 editing.value = !editing.value;
                 break;
 
+            case 'rename':
+                naming.value = !naming.value;
+                break;
+
             default:
                 console.log(name);
         }
@@ -29,7 +44,11 @@
 </script>
 
 <header>
-    <div>{file}</div>
+    {#if naming.value}
+        <input type="text" name="file-name" autocomplete="off" autocorrect="off" bind:value={editedFile} />
+    {:else}
+        <div>{file}</div>
+    {/if}
 
     <ul class="menu">
         <li><button popovertarget="pop-more">{@html icDots}</button></li>
@@ -60,6 +79,7 @@
         outline: 1px solid oklch(from var(--pico-contrast) l c h / 0.15);
         display: grid;
         grid-template-columns: 1fr auto;
+        align-items: center;
 
         & > * {
             margin: 0;

@@ -49,8 +49,10 @@ func main() {
 	}
 
 	http.HandleFunc("GET /api/dir/{path...}", handleDirPath(cwDir))
-	http.HandleFunc("GET /api/file/{path...}", handleFilePath(cwDir))
-	http.HandleFunc("POST /api/file/{path...}", handlePostPath(cwDir))
+	http.HandleFunc("GET /api/file/{path...}", handleGetPath(cwDir))
+	http.HandleFunc("PUT /api/file/{path...}", handlePostPath(cwDir))
+	http.HandleFunc("PATCH /api/file/{path...}", handlePostPath(cwDir))
+	http.HandleFunc("DELETE /api/file/{path...}", handleDelPath(cwDir))
 
 	addr := ":3000"
 
@@ -87,7 +89,7 @@ func handleDirPath(cwDir string) http.HandlerFunc {
 	}
 }
 
-func handleFilePath(cwDir string) http.HandlerFunc {
+func handleGetPath(cwDir string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		urlPath := r.PathValue("path")
 
@@ -125,6 +127,20 @@ func handlePostPath(cwDir string) http.HandlerFunc {
 		if err != nil {
 			log.Printf("write file: %v", err)
 			http.Error(w, "unable to write file", 500)
+			return
+		}
+	}
+}
+
+func handleDelPath(cwDir string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		urlPath := r.PathValue("path")
+
+		log.Printf("%v %q %q", r.Method, r.URL.String(), urlPath)
+
+		if err := os.Remove(filepath.Join(cwDir, ".files", urlPath)); err != nil {
+			log.Printf("remove file: %v", err)
+			http.Error(w, "unable to remove file", 500)
 			return
 		}
 	}
