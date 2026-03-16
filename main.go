@@ -50,8 +50,7 @@ func main() {
 
 	http.HandleFunc("GET /api/dir/{path...}", handleDirPath(cwDir))
 	http.HandleFunc("GET /api/file/{path...}", handleGetPath(cwDir))
-	http.HandleFunc("PUT /api/file/{path...}", handlePostPath(cwDir))
-	http.HandleFunc("PATCH /api/file/{path...}", handlePostPath(cwDir))
+	http.HandleFunc("POST /api/file/{path...}", handlePostPath(cwDir))
 	http.HandleFunc("DELETE /api/file/{path...}", handleDelPath(cwDir))
 
 	addr := ":3000"

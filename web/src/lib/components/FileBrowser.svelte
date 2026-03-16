@@ -38,7 +38,7 @@
 
     /**
      * @param {String} path 
-     * @param {'PUT' | 'PATCH' | 'DELETE'} method
+     * @param {'POST' | 'DELETE'} method
      * @param {String?} body
      */
     async function requestChange(path, method, body = null) {
@@ -59,22 +59,19 @@
     }
 
     async function submitChanges() {
+        const success = await requestChange(`/api/file/${editedFile}`, 'POST', edited);
+        if(!success) return;
+
         if(editedFile !== file) {
-            const created = await requestChange(`/api/file/${editedFile}`, 'PUT', edited);
-            if(!created) return;
+            if(!addingFile) await requestChange(`/api/file/${file}`, 'DELETE');
+
+            addingFile = false;
             
-            if(addingFile) {
-                addingFile = false;
-            } else {
-                await requestChange(`/api/file/${file}`, 'DELETE');
-            }
-
             goto(`/file/${editedFile}`);
-        } else {
-            await requestChange(`/api/file/${file}`, 'PATCH', edited);
-
-            refreshAll();
+            return;
         }
+
+        refreshAll();
     }
 
     function finish() {
