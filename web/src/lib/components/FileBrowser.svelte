@@ -9,8 +9,9 @@
     let file = $derived(page.params.file);
     let content = $derived(page.data.content);
 
-    let directory = $state({ value: '' });
-    setContext('directory', directory);
+    // svelte-ignore state_referenced_locally
+    let workingDir = $state({ value: file?.split('/').filter((p) => !p.match(/\.\w+$/)).join('/') ?? '' });
+    setContext('workingDir', workingDir);
 
     let naming = $state({ value: false });
     setContext('naming', naming);
@@ -28,7 +29,7 @@
     });
 
     function addFile() {
-        editedFile = (directory.value.length > 0) ? directory.value + '/' : directory.value;
+        editedFile = (workingDir.value.length > 0) ? workingDir.value + '/' : workingDir.value;
         edited = '';
 
         addingFile = true;
@@ -81,7 +82,9 @@
 </script>
 
 <div class="browser">
-    <FileNav onaddfile={addFile} />
+    {#key file}
+        <FileNav onaddfile={addFile} />
+    {/key}
 
     <div class="file-view">
         {#if file}

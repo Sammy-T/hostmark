@@ -16,13 +16,13 @@
     let { onaddfile } = $props();
 
     /** @type {{ value: string }} */
-    let directory = getContext('directory');
+    let workingDir = getContext('workingDir');
 
     // @ts-ignore
     let entries = $state([]);
 
     $effect(() => {
-        load(directory.value);
+        load(workingDir.value);
     });
 
     /**
@@ -58,20 +58,20 @@
 
         switch(hrefPath) {
             case '#[home]':
-                directory.value = '';
+                workingDir.value = '';
                 break;
 
             case '#[back]':
-                newPath = directory.value.split('/').slice(0, -1).filter(v => v !== '').join('/');
-                directory.value = newPath;
+                newPath = workingDir.value.split('/').slice(0, -1).filter(v => v !== '').join('/');
+                workingDir.value = newPath;
                 break;
 
             case '#[new]':
                 onaddfile?.();
                 break;
             default:
-                newPath = [...directory.value.split('/').filter(v => v !== ''), hrefPath.split('/').at(-1)].join('/');
-                directory.value = newPath;
+                newPath = [...workingDir.value.split('/').filter(v => v !== ''), hrefPath.split('/').at(-1)].join('/');
+                workingDir.value = newPath;
         }
     }
 
@@ -84,8 +84,6 @@
     <li><a {href} onclick={onEntryClick}>{title}</a></li>
 {/snippet}
 
-<!-- TODO: Make sure component updates when adding a file. -->
-
 <!-- Mobile file nav -->
 {#if showFolderSidebar.value}
 <Sidebar mobileOnly>
@@ -96,7 +94,7 @@
 
         {#each entries as entry}
             {@const type = (entry.isDir) ? '' : '/file'}
-            {@const href = (directory.value) ? [type, directory.value, entry.name].join('/') : [type, entry.name].join('/')}
+            {@const href = (workingDir.value) ? [type, workingDir.value, entry.name].join('/') : [type, entry.name].join('/')}
 
             {@render pathEntry(href, `${entry.name}${entry.isDir ? '/' : ''}`)}
         {/each}
@@ -113,7 +111,7 @@
 
             {#each entries as entry}
                 {@const type = (entry.isDir) ? '' : '/file'}
-                {@const href = (directory.value) ? [type, directory.value, entry.name].join('/') : [type, entry.name].join('/')}
+                {@const href = (workingDir.value) ? [type, workingDir.value, entry.name].join('/') : [type, entry.name].join('/')}
 
                 {@render pathEntry(href, `${entry.name}${entry.isDir ? '/' : ''}`)}
             {/each}
