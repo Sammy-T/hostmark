@@ -122,8 +122,13 @@ func handlePostPath(cwDir string) http.HandlerFunc {
 
 		p := filepath.Join(cwDir, ".files", urlPath)
 
-		err = os.WriteFile(p, body, 0664)
-		if err != nil {
+		if err = os.MkdirAll(filepath.Dir(p), 0755); err != nil {
+			log.Printf("mkdir all: %v", err)
+			http.Error(w, "unable to create directory", 500)
+			return
+		}
+
+		if err = os.WriteFile(p, body, 0644); err != nil {
 			log.Printf("write file: %v", err)
 			http.Error(w, "unable to write file", 500)
 			return
