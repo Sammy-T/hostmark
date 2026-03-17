@@ -38,6 +38,13 @@
         editing.value = true;
     }
 
+    async function deleteFile() {
+        const success = await requestChange(`/api/file/${file}`, 'DELETE');
+        if(!success) return;
+
+        goto(`/file/${workingDir.value}`);
+    }
+
     /**
      * @param {String} path 
      * @param {'POST' | 'DELETE'} method
@@ -90,7 +97,7 @@
     <div class="file-view">
         {#if content}
             {#if file}
-                <FileHeader bind:editedFile />
+                <FileHeader bind:editedFile ondeletefile={deleteFile} />
             {/if}
             
             <FileEditor html={content?.html} bind:edited />

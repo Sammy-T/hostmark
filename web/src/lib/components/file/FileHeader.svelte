@@ -2,16 +2,22 @@
     import icDots from '$lib/assets/dots-vertical.svg?raw';
     import icPencil from '$lib/assets/pencil.svg?raw';
     import icEdit from '$lib/assets/edit.svg?raw';
+    import icTrash from '$lib/assets/trash.svg?raw';
     import { page } from '$app/state';
     import { getContext } from 'svelte';
 
     /**
+     * @callback onDeleteFile
+     */
+
+    /**
      * @typedef {Object} Props
      * @property {String} [editedFile]
+     * @property {onDeleteFile} [ondeletefile]
      */
 
     /** @type {Props} */
-    let { editedFile = $bindable() } = $props();
+    let { editedFile = $bindable(), ondeletefile } = $props();
 
     let file = $derived(page.params.file);
 
@@ -37,6 +43,10 @@
                 naming.value = !naming.value;
                 break;
 
+            case 'delete':
+                ondeletefile?.();
+                break;
+
             default:
                 console.log(name);
         }
@@ -55,10 +65,15 @@
     </ul>
 </header>
 
+{#snippet menuitem(/** @type {String} */ name, /** @type {String} */ content, /** @type {String} */ icon = '')}
+    <button popovertarget="pop-more" {name} onclick={onItemClick}>{#if icon}{@html icon} {/if}{content}</button>
+{/snippet}
+
 <div id="pop-more" popover>
     <div class="container">
-        <button popovertarget="pop-more" name="edit" onclick={onItemClick}>{@html icPencil} edit</button>
-        <button popovertarget="pop-more" name="rename" onclick={onItemClick}>{@html icEdit} rename</button>
+        {@render menuitem('edit', 'edit', icPencil)}
+        {@render menuitem('rename', 'rename', icEdit)}
+        {@render menuitem('delete', 'delete', icTrash)}
     </div>
 </div>
 
