@@ -1,0 +1,26 @@
+info:
+  name: Update file
+  type: http
+  seq: 3
+
+http:
+  method: POST
+  url: "{{SITE_ROOT}}/api/file/{{path}}"
+  body:
+    type: text
+    data: |
+      # {{?heading}}
+
+      {{?contents}}
+  auth: inherit
+
+runtime:
+  variables:
+    - name: path
+      value: "{{?file path}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

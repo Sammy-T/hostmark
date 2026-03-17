@@ -1,0 +1,4 @@
+name: dev
+variables:
+  - name: SITE_ROOT
+    value: http://localhost:3000

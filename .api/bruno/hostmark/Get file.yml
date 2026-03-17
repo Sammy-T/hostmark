@@ -1,0 +1,20 @@
+info:
+  name: Get file
+  type: http
+  seq: 2
+
+http:
+  method: GET
+  url: "{{SITE_ROOT}}/api/file/{{path}}"
+  auth: inherit
+
+runtime:
+  variables:
+    - name: path
+      value: "{{?file path}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
