@@ -2,6 +2,7 @@
     import FileNav from './file/FileNav.svelte';
     import FileHeader from './file/FileHeader.svelte';
     import FileEditor from './file/FileEditor.svelte';
+    import FileNone from './file/FileNone.svelte';
     import { setContext } from 'svelte';
     import { page } from '$app/state';
     import { goto, refreshAll } from '$app/navigation';
@@ -87,14 +88,18 @@
     {/key}
 
     <div class="file-view">
-        {#if file}
-            <FileHeader bind:editedFile />
-        {/if}
+        {#if content}
+            {#if file}
+                <FileHeader bind:editedFile />
+            {/if}
+            
+            <FileEditor html={content?.html} bind:edited />
 
-        <FileEditor html={content?.html} bind:edited />
-
-        {#if naming.value || editing.value}
-            <button class="secondary" onclick={finish}>finish</button>
+            {#if naming.value || editing.value}
+                <button class="secondary" onclick={finish}>finish</button>
+            {/if}
+        {:else}
+            <FileNone />
         {/if}
     </div>
 </div>

@@ -6,6 +6,8 @@ export const ssr = false
 export async function load({ fetch, params }) {
     const resp = await fetch(`/api/file/${params.file}`);
     if(!resp.ok) {
+        if(resp.status === 400) return {};
+
         error(resp.status, resp.statusText);
     }
 
