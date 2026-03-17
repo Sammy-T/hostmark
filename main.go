@@ -2,8 +2,10 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"flag"
 	"io"
+	"io/fs"
 	"log"
 	"net/http"
 	"net/http/httputil"
@@ -94,7 +96,31 @@ func handleGetPath(cwDir string) http.HandlerFunc {
 
 		log.Printf("%v %q %q", r.Method, r.URL.String(), urlPath)
 
-		data, err := os.ReadFile(filepath.Join(cwDir, ".files", urlPath))
+		p := filepath.Join(cwDir, ".files", urlPath)
+
+		info, err := os.Stat(p)
+		if err != nil {
+			msg := "unable to read file"
+			code := 500
+
+			if errors.Is(err, fs.ErrNotExist) {
+				msg = "file not found"
+				code = 404
+			}
+
+			log.Printf("stat file: %v", err)
+			http.Error(w, msg, code)
+			return
+		}
+
+		if info.IsDir() {
+			msg := "requested file is a directory"
+			log.Print(msg)
+			http.Error(w, msg, 400)
+			return
+		}
+
+		data, err := os.ReadFile(p)
 		if err != nil {
 			log.Printf("read file: %v", err)
 			http.Error(w, "unable to read file", 500)
