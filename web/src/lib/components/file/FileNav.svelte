@@ -1,6 +1,6 @@
 <script>
     import Sidebar from '../Sidebar.svelte';
-    import { cbLibPlus, showFolderSidebar } from '$lib/util.svelte';
+    import { cbLibPlus } from '$lib/util.svelte';
     import { getContext, onMount } from 'svelte';
 
     /**
@@ -85,8 +85,7 @@
 {/snippet}
 
 <!-- Mobile file nav -->
-{#if showFolderSidebar.value}
-<Sidebar mobileOnly>
+<Sidebar popId="mobile-file-nav" mobileOnly>
     <ul data-sveltekit-preload-data="off">
         {@render pathEntry('/#[home]', '[home]')}
         {@render pathEntry('/#[back]', '..')}
@@ -100,7 +99,6 @@
         {/each}
 </ul>
 </Sidebar>
-{/if}
 
 <aside>
     <nav>

@@ -1,24 +1,31 @@
 <script>
-    import { fade } from 'svelte/transition';
-
     /**
      * @typedef {Object} Props
-     * @property {import('svelte').Snippet} children
      * @property {Boolean} [mobileOnly]
      * @property {Boolean} [desktopOnly]
+     * @property {String} [popId]
+     * @property {import('svelte').Snippet} children
      */
 
     /** @type {Props} */
-    let { children, mobileOnly = false, desktopOnly = false } = $props();
+    let { mobileOnly = false, desktopOnly = false, popId, children } = $props();
 </script>
 
-<aside class="sidebar" class:mobile={mobileOnly} class:desktop={desktopOnly} transition:fade>
-    <nav>
-        {@render children()}
-    </nav>
-</aside>
+<div id={popId} class:mobile={mobileOnly} class:desktop={desktopOnly} popover={(popId) ? 'auto' : null}>
+    <aside class="sidebar">
+        <nav>
+            {@render children()}
+        </nav>
+    </aside>
+</div>
 
 <style>
+    [popover] {
+        margin: 0;
+        inset: auto;
+        border: none;
+    }
+
     .sidebar {
         :global(button) {
             padding: 0;

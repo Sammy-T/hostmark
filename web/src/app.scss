@@ -22,6 +22,7 @@ body {
     height: 100dvh;
     margin: auto;
     outline: 1px solid oklch(from var(--pico-contrast) l c h / 0.15);
+    overflow: hidden;
 }
 
 @media (min-width: 768px) {

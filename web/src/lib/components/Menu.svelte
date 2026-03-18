@@ -8,16 +8,10 @@
     import icFolders from '$lib/assets/folders.svg?raw';
     import icLibraryPlus from '$lib/assets/library-plus.svg?raw';
     import Sidebar from './Sidebar.svelte';
-    import { cbLibPlus, showFolderSidebar } from '$lib/util.svelte';
+    import { cbLibPlus } from '$lib/util.svelte';
     import { page } from '$app/state';
 
     let current = $derived((page.url.pathname === '/') ? 'file' : page.url.pathname.split('/').filter((v) => v !== '').at(0));
-
-    let showMobile = $state(false);
-
-    function toggleMobile() {
-        showMobile = !showMobile;
-    }
 
     /**
      * @param {HTMLElement} node
@@ -56,21 +50,20 @@
 
 <!-- Mobile menu -->
 <nav class="toggle">
-    <button onclick={toggleMobile}>{@html icMenu}</button>
+    <button popovertarget="mobile-menu">{@html icMenu}</button>
 
     <!-- TODO: Display addl items based on location -->
     <!-- File page item(s) -->
     <ul>
-        <li><button onclick={() => showFolderSidebar.value = !showFolderSidebar.value}>{@html icFolders}</button></li>
+        <li><button popovertarget="mobile-file-nav">{@html icFolders}</button></li>
         <li><button onclick={cbLibPlus.cb?.()}>{@html icLibraryPlus}</button></li>
     </ul>
 </nav>
 
-{#if showMobile}
 <!-- Mobile page nav -->
-<Sidebar mobileOnly>
+<Sidebar popId="mobile-menu" mobileOnly>
     <ul>
-        <li><button onclick={toggleMobile}>{@html icClose}</button></li>
+        <li><button popovertarget="mobile-menu">{@html icClose}</button></li>
         <li>hm</li>
         <li><a href="/">{@html icFiles} Files</a></li>
         <li><a href="#">{@html icProfile} Profile</a></li>
@@ -81,7 +74,6 @@
         <li><a href="#">{@html icSignout} Sign out</a></li>
     </ul>
 </Sidebar>
-{/if}
 
 <!-- Desktop page nav -->
 <Sidebar desktopOnly>
