@@ -1,0 +1,22 @@
+info:
+  name: Sign up
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{SITE_ROOT}}/api/auth/signup"
+  body:
+    type: form-urlencoded
+    data:
+      - name: username
+        value: "{{?username}}"
+      - name: password
+        value: "{{?password}}"
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
