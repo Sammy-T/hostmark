@@ -8,10 +8,28 @@ import (
 	"os/exec"
 	"path/filepath"
 
+	"github.com/glebarez/sqlite"
 	httpExt "github.com/sammy-t/hostmark/internal/http"
+	"gorm.io/gorm"
 )
 
 var dev bool
+var db *gorm.DB
+
+func init() {
+	var err error
+
+	cfg := &gorm.Config{
+		TranslateError: true,
+	}
+
+	db, err = gorm.Open(sqlite.Open("hostmark.db"), cfg)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	db.AutoMigrate(&User{})
+}
 
 func main() {
 	flag.BoolVar(&dev, "dev", false, "development mode")
