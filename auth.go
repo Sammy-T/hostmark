@@ -2,14 +2,12 @@ package main
 
 import (
 	"encoding/base64"
-	"errors"
 	"fmt"
 	"log"
 	"net/http"
 
 	"github.com/sammy-t/hostmark/internal/auth"
 	"github.com/sammy-t/hostmark/pwd"
-	"gorm.io/gorm"
 )
 
 var hashParams pwd.HashParams = pwd.HashParams{
@@ -55,7 +53,16 @@ func handleSignUp() http.HandlerFunc {
 		// 	return
 		// }
 
-		//// TODO: Check if username already exists before hashing
+		foundResult := db.Where("username = ?", username).Limit(1).Find(&User{})
+
+		if foundResult.Error != nil {
+			http.Error(w, "data error", 500)
+			return
+		} else if foundResult.RowsAffected != 0 {
+			log.Printf("username %q already exists", username)
+			http.Error(w, "invalid username", 400)
+			return
+		}
 
 		s := pwd.GenerateSalt(32)
 		h := pwd.HashPwd([]byte(password), s, hashParams)
@@ -69,12 +76,7 @@ func handleSignUp() http.HandlerFunc {
 			Salt:     salt,
 		}
 
-		result := db.Create(&user)
-
-		if errors.Is(result.Error, gorm.ErrDuplicatedKey) { // Username already exists
-			http.Error(w, "invalid username", 400)
-			return
-		} else if result.Error != nil {
+		if result := db.Create(&user); result.Error != nil {
 			http.Error(w, "unable to create user", 500)
 			return
 		}
