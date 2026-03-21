@@ -1,6 +1,7 @@
 package pwd
 
 import (
+	"crypto/rand"
 	"crypto/sha1"
 	"encoding/hex"
 	"fmt"
@@ -9,7 +10,16 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+
+	"golang.org/x/crypto/argon2"
 )
+
+type HashParams struct {
+	Time    uint32
+	Memory  uint32
+	Threads uint8
+	KeyLen  uint32
+}
 
 // CheckAgainstPwned hashes the provided password
 // and compares the password hash to the response queried from the PwnedPasswords API
@@ -75,4 +85,15 @@ func CheckAgainstPwned(appUserAgent string, pwd string, threshold int64) error {
 	}
 
 	return nil
+}
+
+func GenerateSalt(saltLen int) []byte {
+	saltBytes := make([]byte, saltLen)
+	rand.Read(saltBytes)
+
+	return saltBytes
+}
+
+func HashPwd(pwd []byte, salt []byte, p HashParams) []byte {
+	return argon2.IDKey(pwd, salt, p.Time, p.Memory, p.Threads, p.KeyLen)
 }

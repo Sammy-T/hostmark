@@ -1,14 +1,23 @@
 package main
 
 import (
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"log"
 	"net/http"
 
 	"github.com/sammy-t/hostmark/internal/auth"
+	"github.com/sammy-t/hostmark/pwd"
 	"gorm.io/gorm"
 )
+
+var hashParams pwd.HashParams = pwd.HashParams{
+	Time:    1,
+	Memory:  64 * 1024,
+	Threads: 4,
+	KeyLen:  32,
+}
 
 func handleSignUp() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -46,11 +55,18 @@ func handleSignUp() http.HandlerFunc {
 		// 	return
 		// }
 
-		//// TODO: Hash pwd
+		//// TODO: Check if username already exists before hashing
+
+		s := pwd.GenerateSalt(32)
+		h := pwd.HashPwd([]byte(password), s, hashParams)
+
+		salt := base64.StdEncoding.EncodeToString(s)
+		hashed := base64.StdEncoding.EncodeToString(h)
 
 		user := User{
 			Username: username,
-			PwdHash:  "UNHASHED:" + password,
+			PwdHash:  hashed,
+			Salt:     salt,
 		}
 
 		result := db.Create(&user)

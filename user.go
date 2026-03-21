@@ -6,4 +6,5 @@ type User struct {
 	dbExt.Model
 	Username string `gorm:"unique"`
 	PwdHash  string
+	Salt     string
 }
