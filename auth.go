@@ -15,6 +15,8 @@ import (
 )
 
 var hmSecret string = "my-hostmark-secret" //// TODO: Load from env
+var accessDuration time.Duration = 2 * time.Minute
+var refreshDuration time.Duration = 5 * time.Minute
 
 var hashParams pwd.HashParams = pwd.HashParams{
 	Time:    1,
@@ -41,10 +43,9 @@ func handleSignUp() http.HandlerFunc {
 			err = fmt.Errorf("invalid username")
 		}
 
-		//// TODO: TEMP
-		// if !auth.IsValidPassword(password) {
-		// 	err = fmt.Errorf("invalid password")
-		// }
+		if !auth.IsValidPassword(password) {
+			err = fmt.Errorf("invalid password")
+		}
 
 		if err != nil {
 			log.Print(err)
@@ -52,12 +53,11 @@ func handleSignUp() http.HandlerFunc {
 			return
 		}
 
-		//// TODO: TEMP
-		// if err = pwd.CheckAgainstPwned("hostmark.sammy-t", password, 25); err != nil {
-		// 	log.Print(err)
-		// 	http.Error(w, err.Error(), http.StatusBadRequest)
-		// 	return
-		// }
+		if err = pwd.CheckAgainstPwned("hostmark.sammy-t", password, 25); err != nil {
+			log.Print(err)
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
 
 		foundResult := db.Where("username = ?", username).Limit(1).Find(&User{})
 
@@ -81,17 +81,11 @@ func handleSignUp() http.HandlerFunc {
 			PwdHash:  hashed,
 			Salt:     salt,
 		}
-		log.Print(user)
 
-		//// TODO: TEMP
-		// if result := db.Create(&user); result.Error != nil {
-		// 	http.Error(w, "unable to create user", http.StatusInternalServerError)
-		// 	return
-		// }
-
-		//// TODO: Set reasonable durations
-		accessDuration := 2 * time.Minute
-		refreshDuration := 5 * time.Minute
+		if result := db.Create(&user); result.Error != nil {
+			http.Error(w, "unable to create user", http.StatusInternalServerError)
+			return
+		}
 
 		refreshId, err := uuid.NewV7()
 		if err != nil {
@@ -127,30 +121,29 @@ func handleSignUp() http.HandlerFunc {
 			"jti": nonce,
 		}
 
+		errMsg := "error completing auth"
+
 		accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, accessClaims)
 		accessJwt, err := accessToken.SignedString([]byte(hmSecret))
 		if err != nil {
-			msg := "error completing auth"
-			log.Printf("%v: %v", msg, err)
-			http.Error(w, msg, http.StatusInternalServerError)
+			log.Printf("%v: %v", errMsg, err)
+			http.Error(w, errMsg, http.StatusInternalServerError)
 			return
 		}
 
 		refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshClaims)
 		refreshJwt, err := refreshToken.SignedString([]byte(hmSecret))
 		if err != nil {
-			msg := "error completing auth"
-			log.Printf("%v: %v", msg, err)
-			http.Error(w, msg, http.StatusInternalServerError)
+			log.Printf("%v: %v", errMsg, err)
+			http.Error(w, errMsg, http.StatusInternalServerError)
 			return
 		}
 
 		deviceToken := jwt.NewWithClaims(jwt.SigningMethodHS256, deviceClaims)
 		deviceJwt, err := deviceToken.SignedString([]byte(hmSecret))
 		if err != nil {
-			msg := "error completing auth"
-			log.Printf("%v: %v", msg, err)
-			http.Error(w, msg, http.StatusInternalServerError)
+			log.Printf("%v: %v", errMsg, err)
+			http.Error(w, errMsg, http.StatusInternalServerError)
 			return
 		}
 
