@@ -10,8 +10,6 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-
-	"golang.org/x/crypto/argon2"
 )
 
 type HashParams struct {
@@ -87,13 +85,9 @@ func CheckAgainstPwned(appUserAgent string, pwd string, threshold int64) error {
 	return nil
 }
 
-func GenerateSalt(saltLen int) []byte {
-	saltBytes := make([]byte, saltLen)
-	rand.Read(saltBytes)
+func GenerateRandBytes(length int) []byte {
+	b := make([]byte, length)
+	rand.Read(b)
 
-	return saltBytes
-}
-
-func HashPwd(pwd []byte, salt []byte, p HashParams) []byte {
-	return argon2.IDKey(pwd, salt, p.Time, p.Memory, p.Threads, p.KeyLen)
+	return b
 }
