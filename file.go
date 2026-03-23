@@ -25,7 +25,7 @@ func handleDirPath(cwDir string) http.HandlerFunc {
 		entries, err := os.ReadDir(filepath.Join(cwDir, ".files", urlPath))
 		if err != nil {
 			log.Printf("read dir: %v", err)
-			http.Error(w, "unable to read directory", 500)
+			http.Error(w, "unable to read directory", http.StatusInternalServerError)
 			return
 		}
 
@@ -56,11 +56,11 @@ func handleGetPath(cwDir string) http.HandlerFunc {
 		info, err := os.Stat(p)
 		if err != nil {
 			msg := "unable to read file"
-			code := 500
+			code := http.StatusInternalServerError
 
 			if errors.Is(err, fs.ErrNotExist) {
 				msg = "file not found"
-				code = 404
+				code = http.StatusNotFound
 			}
 
 			log.Printf("stat file: %v", err)
@@ -71,14 +71,14 @@ func handleGetPath(cwDir string) http.HandlerFunc {
 		if info.IsDir() {
 			msg := "requested file is a directory"
 			log.Print(msg)
-			http.Error(w, msg, 400)
+			http.Error(w, msg, http.StatusBadRequest)
 			return
 		}
 
 		data, err := os.ReadFile(p)
 		if err != nil {
 			log.Printf("read file: %v", err)
-			http.Error(w, "unable to read file", 500)
+			http.Error(w, "unable to read file", http.StatusInternalServerError)
 			return
 		}
 
@@ -97,7 +97,7 @@ func handlePostPath(cwDir string) http.HandlerFunc {
 
 		if err != nil {
 			log.Printf("read req body: %v", err)
-			http.Error(w, "unable to read body", 500)
+			http.Error(w, "unable to read body", http.StatusInternalServerError)
 			return
 		}
 
@@ -105,13 +105,13 @@ func handlePostPath(cwDir string) http.HandlerFunc {
 
 		if err = os.MkdirAll(filepath.Dir(p), 0755); err != nil {
 			log.Printf("mkdir all: %v", err)
-			http.Error(w, "unable to create directory", 500)
+			http.Error(w, "unable to create directory", http.StatusInternalServerError)
 			return
 		}
 
 		if err = os.WriteFile(p, body, 0644); err != nil {
 			log.Printf("write file: %v", err)
-			http.Error(w, "unable to write file", 500)
+			http.Error(w, "unable to write file", http.StatusInternalServerError)
 			return
 		}
 	}
@@ -125,7 +125,7 @@ func handleDelPath(cwDir string) http.HandlerFunc {
 
 		if err := os.Remove(filepath.Join(cwDir, ".files", urlPath)); err != nil {
 			log.Printf("remove file: %v", err)
-			http.Error(w, "unable to remove file", 500)
+			http.Error(w, "unable to remove file", http.StatusInternalServerError)
 			return
 		}
 	}
