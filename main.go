@@ -28,7 +28,7 @@ func init() {
 		log.Fatal(err)
 	}
 
-	db.AutoMigrate(&User{})
+	db.AutoMigrate(&User{}, &FailedLogin{}, &LockedToken{})
 }
 
 func main() {
@@ -55,6 +55,7 @@ func main() {
 	}
 
 	http.HandleFunc("POST /api/auth/signup", handleSignUp())
+	http.HandleFunc("POST /api/auth/login", handleLogIn())
 
 	http.HandleFunc("GET /api/dir/{path...}", handleDirPath(cwDir))
 	http.HandleFunc("GET /api/file/{path...}", handleGetPath(cwDir))

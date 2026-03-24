@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -12,11 +13,23 @@ import (
 	"github.com/sammy-t/hostmark/internal/auth"
 	"github.com/sammy-t/hostmark/pwd"
 	"golang.org/x/crypto/argon2"
+	"gorm.io/gorm"
+)
+
+type CookieName string
+
+const (
+	CookieAccess  CookieName = "client_acc"
+	CookieRefresh CookieName = "client_ref"
+	CookieDevice  CookieName = "client_dev"
 )
 
 var hmSecret string = "my-hostmark-secret" //// TODO: Load from env
+
 var accessDuration time.Duration = 2 * time.Minute
 var refreshDuration time.Duration = 5 * time.Minute
+var lockDuration time.Duration = 5 * time.Minute
+var authAttemptLimit int = 3
 
 var hashParams pwd.HashParams = pwd.HashParams{
 	Time:    1,
@@ -62,6 +75,7 @@ func handleSignUp() http.HandlerFunc {
 		foundResult := db.Where("username = ?", username).Limit(1).Find(&User{})
 
 		if foundResult.Error != nil {
+			log.Printf("find user: %v", foundResult.Error)
 			http.Error(w, "data error", http.StatusInternalServerError)
 			return
 		} else if foundResult.RowsAffected != 0 {
@@ -87,25 +101,304 @@ func handleSignUp() http.HandlerFunc {
 			return
 		}
 
-		refreshId, err := uuid.NewV7()
+		errMsg := "error completing auth"
+
+		accessCookie, err := createTokenCookie(CookieAccess, username)
 		if err != nil {
-			log.Printf("uuid: %v", err)
-			http.Error(w, "error completing auth", http.StatusInternalServerError)
+			log.Print(err)
+			http.Error(w, errMsg, http.StatusInternalServerError)
 			return
 		}
 
-		nonceBytes := pwd.GenerateRandBytes(32)
-		nonce := base64.StdEncoding.EncodeToString(nonceBytes)
+		refreshCookie, err := createTokenCookie(CookieRefresh, username)
+		if err != nil {
+			log.Print(err)
+			http.Error(w, errMsg, http.StatusInternalServerError)
+			return
+		}
 
-		accessClaims := jwt.MapClaims{
+		deviceCookie, err := createTokenCookie(CookieDevice, username)
+		if err != nil {
+			log.Print(err)
+			http.Error(w, errMsg, http.StatusInternalServerError)
+			return
+		}
+
+		http.SetCookie(w, accessCookie)
+		http.SetCookie(w, refreshCookie)
+		http.SetCookie(w, deviceCookie)
+	}
+}
+
+func handleLogIn() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("%v %q", r.Method, r.URL.String())
+
+		err := r.ParseForm()
+		if err != nil {
+			log.Printf("parse form: %v", err)
+			http.Error(w, "unable to parse request", http.StatusInternalServerError)
+			return
+		}
+
+		username := r.PostForm.Get("username")
+		password := r.PostForm.Get("password")
+
+		if !auth.IsValidUsername(username) {
+			err = fmt.Errorf("invalid username")
+		}
+
+		if !auth.IsValidPassword(password) {
+			err = fmt.Errorf("invalid password")
+		}
+
+		if err != nil {
+			log.Print(err)
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		reqDeviceCookie, _ := r.Cookie(string(CookieDevice))
+		reqDeviceToken := validateDeviceToken(reqDeviceCookie, username)
+
+		if reqDeviceToken != nil { // Trusted client
+			nonce, err := parseTokenClaimString(reqDeviceToken, "jti")
+			if err != nil {
+				log.Print(err)
+				http.Error(w, "data error", http.StatusInternalServerError)
+				return
+			}
+
+			var lockedTokens []LockedToken
+
+			if result := db.Where("username = ?", username).Find(&lockedTokens); result.Error != nil {
+				log.Printf("locked tokens: %v", result.Error)
+				http.Error(w, "data error", http.StatusInternalServerError)
+				return
+			}
+
+			var expiredLocks []LockedToken
+			var locked bool
+
+			for _, token := range lockedTokens {
+				expired := time.Now().After(token.CreatedAt.Add(lockDuration))
+
+				if expired {
+					expiredLocks = append(expiredLocks, token)
+				} else if token.Nonce == nonce {
+					locked = true
+				}
+			}
+
+			if len(expiredLocks) > 0 {
+				db.Delete(&expiredLocks)
+			}
+
+			if locked {
+				log.Print("auth attempt with locked device token")
+				http.Error(w, "invalid credentials", http.StatusBadRequest)
+				return
+			}
+		} else { // Untrusted client
+			var user User
+
+			if result := db.Where("username = ?", username).First(&user); result.Error != nil {
+				msg := "data error"
+				code := http.StatusInternalServerError
+
+				if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+					msg = "invalid credentials"
+					code = http.StatusBadRequest
+				}
+
+				log.Printf("find user: %v", result.Error)
+				http.Error(w, msg, code)
+				return
+			}
+
+			if user.LockdownTime != nil {
+				expired := time.Now().After(user.LockdownTime.Add(lockDuration))
+
+				if expired {
+					log.Print("removing account lockdown")
+
+					if result := db.Model(&user).Update("lockdown_time", nil); result.Error != nil {
+						log.Printf("remove lockdown: %v", result.Error)
+						http.Error(w, "data error", http.StatusInternalServerError)
+						return
+					}
+				} else {
+					log.Print("auth attempt with locked account")
+					http.Error(w, "invalid credentials", http.StatusBadRequest)
+					return
+				}
+			}
+		}
+
+		var user User
+
+		if result := db.Where("username = ?", username).First(&user); result.Error != nil {
+			msg := "data error"
+			code := http.StatusInternalServerError
+
+			if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+				msg = "invalid credentials"
+				code = http.StatusBadRequest
+			}
+
+			log.Printf("find user: %v", result.Error)
+			http.Error(w, msg, code)
+			return
+		}
+
+		s, err := base64.StdEncoding.DecodeString(user.Salt)
+		if err != nil {
+			log.Print(err)
+			http.Error(w, "data error", http.StatusInternalServerError)
+			return
+		}
+
+		h := argon2.IDKey([]byte(password), s, hashParams.Time, hashParams.Memory, hashParams.Threads, hashParams.KeyLen)
+
+		hashed := base64.StdEncoding.EncodeToString(h)
+
+		if hashed != user.PwdHash {
+			log.Print("invalid password")
+
+			failed := FailedLogin{
+				Username: username,
+			}
+
+			if reqDeviceToken != nil {
+				nonce, err := parseTokenClaimString(reqDeviceToken, "jti")
+				if err != nil {
+					log.Print(err)
+					http.Error(w, "data error", http.StatusInternalServerError)
+					return
+				}
+
+				if nonce != "" {
+					failed.Nonce = &nonce
+				}
+			}
+
+			if result := db.Create(&failed); result.Error != nil {
+				log.Printf("failed login: %v", result.Error)
+				http.Error(w, "data error", http.StatusInternalServerError)
+				return
+			}
+
+			var stored []FailedLogin
+			var loginsResult *gorm.DB
+
+			if failed.Nonce != nil {
+				loginsResult = db.Where("username = ? AND nonce = ?", username, failed.Nonce).Find(&stored)
+			} else {
+				loginsResult = db.Where("username = ?", username).Find(&stored)
+			}
+
+			if loginsResult.Error != nil {
+				log.Printf("failed logins: %v", loginsResult.Error)
+				http.Error(w, "data error", http.StatusInternalServerError)
+				return
+			}
+
+			var expired []FailedLogin
+			var failedWithinDur []FailedLogin
+
+			for _, attempt := range stored {
+				exp := time.Now().After(attempt.CreatedAt.Add(lockDuration))
+
+				if exp {
+					expired = append(expired, attempt)
+				} else {
+					failedWithinDur = append(failedWithinDur, attempt)
+				}
+			}
+
+			if len(expired) > 0 {
+				db.Delete(&expired)
+			}
+
+			log.Printf("found %d, %d/%d failed", len(stored), len(failedWithinDur), authAttemptLimit)
+
+			if len(failedWithinDur) > authAttemptLimit {
+				if failed.Nonce != nil {
+					locked := LockedToken{
+						Username: username,
+						Nonce:    *failed.Nonce,
+					}
+
+					log.Print("locking token")
+
+					if result := db.Create(&locked); result.Error != nil {
+						log.Printf("locked token: %v", result.Error)
+						http.Error(w, "data error", http.StatusInternalServerError)
+						return
+					}
+				} else {
+					log.Print("lockdown account")
+
+					if result := db.Model(&user).Update("lockdown_time", time.Now()); result.Error != nil {
+						log.Printf("set lockdown: %v", result.Error)
+						http.Error(w, "data error", http.StatusInternalServerError)
+						return
+					}
+				}
+			}
+
+			http.Error(w, "invalid credentials", http.StatusBadRequest)
+			return
+		}
+
+		errMsg := "error completing auth"
+
+		accessCookie, err := createTokenCookie(CookieAccess, username)
+		if err != nil {
+			log.Print(err)
+			http.Error(w, errMsg, http.StatusInternalServerError)
+			return
+		}
+
+		refreshCookie, err := createTokenCookie(CookieRefresh, username)
+		if err != nil {
+			log.Print(err)
+			http.Error(w, errMsg, http.StatusInternalServerError)
+			return
+		}
+
+		deviceCookie, err := createTokenCookie(CookieDevice, username)
+		if err != nil {
+			log.Print(err)
+			http.Error(w, errMsg, http.StatusInternalServerError)
+			return
+		}
+
+		http.SetCookie(w, accessCookie)
+		http.SetCookie(w, refreshCookie)
+		http.SetCookie(w, deviceCookie)
+	}
+}
+
+func createTokenCookie(name CookieName, username string) (*http.Cookie, error) {
+	var claims jwt.MapClaims
+
+	switch name {
+	case CookieAccess:
+		claims = jwt.MapClaims{
 			"iss": "hostmark",
 			"aud": "acc",
 			"sub": username,
 			"iat": time.Now().Unix(),
 			"exp": time.Now().Add(accessDuration).Unix(),
 		}
+	case CookieRefresh:
+		refreshId, err := uuid.NewV7()
+		if err != nil {
+			return nil, err
+		}
 
-		refreshClaims := jwt.MapClaims{
+		claims = jwt.MapClaims{
 			"iss": "hostmark",
 			"aud": "ref",
 			"sub": username,
@@ -113,71 +406,87 @@ func handleSignUp() http.HandlerFunc {
 			"iat": time.Now().Unix(),
 			"exp": time.Now().Add(refreshDuration).Unix(),
 		}
+	case CookieDevice:
+		nonceBytes := pwd.GenerateRandBytes(32)
+		nonce := base64.StdEncoding.EncodeToString(nonceBytes)
 
-		deviceClaims := jwt.MapClaims{
+		claims = jwt.MapClaims{
 			"iss": "hostmark",
 			"aud": "dev",
 			"sub": username,
 			"jti": nonce,
 		}
-
-		errMsg := "error completing auth"
-
-		accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, accessClaims)
-		accessJwt, err := accessToken.SignedString([]byte(hmSecret))
-		if err != nil {
-			log.Printf("%v: %v", errMsg, err)
-			http.Error(w, errMsg, http.StatusInternalServerError)
-			return
-		}
-
-		refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshClaims)
-		refreshJwt, err := refreshToken.SignedString([]byte(hmSecret))
-		if err != nil {
-			log.Printf("%v: %v", errMsg, err)
-			http.Error(w, errMsg, http.StatusInternalServerError)
-			return
-		}
-
-		deviceToken := jwt.NewWithClaims(jwt.SigningMethodHS256, deviceClaims)
-		deviceJwt, err := deviceToken.SignedString([]byte(hmSecret))
-		if err != nil {
-			log.Printf("%v: %v", errMsg, err)
-			http.Error(w, errMsg, http.StatusInternalServerError)
-			return
-		}
-
-		accessCookie := http.Cookie{
-			Name:     "client_acc",
-			Value:    accessJwt,
-			Path:     "/api",
-			MaxAge:   int(accessDuration.Seconds()),
-			SameSite: http.SameSiteLaxMode,
-			HttpOnly: true,
-			Secure:   true,
-		}
-
-		refreshCookie := http.Cookie{
-			Name:     "client_ref",
-			Value:    refreshJwt,
-			Path:     "/api",
-			MaxAge:   int(refreshDuration.Seconds()),
-			SameSite: http.SameSiteLaxMode,
-			HttpOnly: true,
-			Secure:   true,
-		}
-
-		deviceCookie := http.Cookie{
-			Name:     "client_dev",
-			Value:    deviceJwt,
-			Path:     "/api",
-			SameSite: http.SameSiteLaxMode,
-			HttpOnly: true,
-			Secure:   true,
-		}
-
-		http.SetCookie(w, &accessCookie)
-		http.SetCookie(w, &refreshCookie)
-		http.SetCookie(w, &deviceCookie)
+	default:
+		return nil, fmt.Errorf("invalid cookie name")
 	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenJwt, err := token.SignedString([]byte(hmSecret))
+
+	if err != nil {
+		return nil, err
+	}
+
+	cookie := http.Cookie{
+		Name:     string(name),
+		Value:    tokenJwt,
+		SameSite: http.SameSiteLaxMode,
+		HttpOnly: true,
+		Secure:   true,
+	}
+
+	switch name {
+	case CookieAccess:
+		cookie.Path = "/api"
+		cookie.MaxAge = int(accessDuration.Seconds())
+	case CookieRefresh:
+		cookie.Path = "/api"
+		cookie.MaxAge = int(refreshDuration.Seconds())
+	case CookieDevice:
+		cookie.Path = "/api/auth/login"
+	}
+
+	return &cookie, nil
+}
+
+func validateDeviceToken(deviceCookie *http.Cookie, username string) *jwt.Token {
+	if deviceCookie == nil {
+		log.Print("no device cookie")
+		return nil
+	}
+
+	keyfunc := func(t *jwt.Token) (any, error) {
+		return []byte(hmSecret), nil
+	}
+
+	opts := []jwt.ParserOption{
+		jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}),
+		jwt.WithIssuer("hostmark"),
+		jwt.WithAudience("dev"),
+		jwt.WithSubject(username),
+	}
+
+	token, err := jwt.Parse(deviceCookie.Value, keyfunc, opts...)
+	if err != nil {
+		log.Print(err)
+		return nil
+	}
+
+	return token
+}
+
+// parseTokenClaimString is a helper for retrieving claims
+// which jwt.Claims and jwt.MapClaims don't provide access to by default.
+func parseTokenClaimString(deviceToken *jwt.Token, claim string) (string, error) {
+	claims, ok := deviceToken.Claims.(jwt.MapClaims)
+	if !ok {
+		return "", fmt.Errorf("error casting to MapClaims")
+	}
+
+	nonce, nonceOk := claims[claim].(string)
+	if !nonceOk {
+		return "", fmt.Errorf("error casting %q", claim)
+	}
+
+	return nonce, nil
 }

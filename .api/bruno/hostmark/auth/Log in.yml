@@ -1,0 +1,22 @@
+info:
+  name: Log in
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: "{{SITE_ROOT}}/api/auth/login"
+  body:
+    type: form-urlencoded
+    data:
+      - name: username
+        value: "{{?username}}"
+      - name: password
+        value: "{{?password}}"
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
