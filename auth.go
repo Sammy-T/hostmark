@@ -159,15 +159,12 @@ func handleLogIn() http.HandlerFunc {
 		}
 
 		reqDeviceCookie, _ := r.Cookie(string(CookieDevice))
-		reqDeviceToken := validateDeviceToken(reqDeviceCookie, username)
+		reqDeviceToken, claims := validateDeviceToken(reqDeviceCookie, username)
 
-		if reqDeviceToken != nil { // Trusted client
-			nonce, err := parseTokenClaimString(reqDeviceToken, "jti")
-			if err != nil {
-				log.Print(err)
-				http.Error(w, "data error", http.StatusInternalServerError)
-				return
-			}
+		var nonce string
+
+		if reqDeviceToken != nil && claims.ID != "" { // Trusted client
+			nonce = claims.ID
 
 			var lockedTokens []LockedToken
 
@@ -269,17 +266,8 @@ func handleLogIn() http.HandlerFunc {
 				Username: username,
 			}
 
-			if reqDeviceToken != nil {
-				nonce, err := parseTokenClaimString(reqDeviceToken, "jti")
-				if err != nil {
-					log.Print(err)
-					http.Error(w, "data error", http.StatusInternalServerError)
-					return
-				}
-
-				if nonce != "" {
-					failed.Nonce = &nonce
-				}
+			if reqDeviceToken != nil && nonce != "" {
+				failed.Nonce = &nonce
 			}
 
 			if result := db.Create(&failed); result.Error != nil {
@@ -380,54 +368,54 @@ func handleLogIn() http.HandlerFunc {
 	}
 }
 
-func createTokenCookie(name CookieName, username string) (*http.Cookie, error) {
-	var claims jwt.MapClaims
+func createTokenCookie(name CookieName, username string) (cookie *http.Cookie, token *jwt.Token, tokenJwt string, err error) {
+	var claims jwt.RegisteredClaims
 
 	switch name {
 	case CookieAccess:
-		claims = jwt.MapClaims{
-			"iss": "hostmark",
-			"aud": "acc",
-			"sub": username,
-			"iat": time.Now().Unix(),
-			"exp": time.Now().Add(accessDuration).Unix(),
+		claims = jwt.RegisteredClaims{
+			Issuer:    "hostmark",
+			Audience:  jwt.ClaimStrings{"acc"},
+			Subject:   username,
+			IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(accessDuration).UTC()),
 		}
 	case CookieRefresh:
 		refreshId, err := uuid.NewV7()
 		if err != nil {
-			return nil, err
+			return nil, nil, "", err
 		}
 
-		claims = jwt.MapClaims{
-			"iss": "hostmark",
-			"aud": "ref",
-			"sub": username,
-			"jti": refreshId.String(),
-			"iat": time.Now().Unix(),
-			"exp": time.Now().Add(refreshDuration).Unix(),
+		claims = jwt.RegisteredClaims{
+			Issuer:    "hostmark",
+			Audience:  jwt.ClaimStrings{"ref"},
+			Subject:   username,
+			ID:        refreshId.String(),
+			IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(accessDuration).UTC()),
 		}
 	case CookieDevice:
 		nonceBytes := pwd.GenerateRandBytes(32)
 		nonce := base64.StdEncoding.EncodeToString(nonceBytes)
 
-		claims = jwt.MapClaims{
-			"iss": "hostmark",
-			"aud": "dev",
-			"sub": username,
-			"jti": nonce,
+		claims = jwt.RegisteredClaims{
+			Issuer:   "hostmark",
+			Audience: jwt.ClaimStrings{"dev"},
+			Subject:  username,
+			ID:       nonce,
 		}
 	default:
-		return nil, fmt.Errorf("invalid cookie name")
+		return nil, nil, "", fmt.Errorf("invalid cookie name")
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenJwt, err := token.SignedString([]byte(hmSecret))
+	token = jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenJwt, err = token.SignedString([]byte(hmSecret))
 
 	if err != nil {
-		return nil, err
+		return nil, nil, "", err
 	}
 
-	cookie := http.Cookie{
+	cookie = &http.Cookie{
 		Name:     string(name),
 		Value:    tokenJwt,
 		SameSite: http.SameSiteLaxMode,
@@ -446,13 +434,13 @@ func createTokenCookie(name CookieName, username string) (*http.Cookie, error) {
 		cookie.Path = "/api/auth/login"
 	}
 
-	return &cookie, nil
+	return
 }
 
-func validateDeviceToken(deviceCookie *http.Cookie, username string) *jwt.Token {
+func validateDeviceToken(deviceCookie *http.Cookie, username string) (*jwt.Token, *jwt.RegisteredClaims) {
 	if deviceCookie == nil {
 		log.Print("no device cookie")
-		return nil
+		return nil, nil
 	}
 
 	keyfunc := func(t *jwt.Token) (any, error) {
@@ -466,27 +454,14 @@ func validateDeviceToken(deviceCookie *http.Cookie, username string) *jwt.Token 
 		jwt.WithSubject(username),
 	}
 
-	token, err := jwt.Parse(deviceCookie.Value, keyfunc, opts...)
+	token, err := jwt.ParseWithClaims(deviceCookie.Value, &jwt.RegisteredClaims{}, keyfunc, opts...)
 	if err != nil {
 		log.Print(err)
-		return nil
+		return nil, nil
+	} else if claims, ok := token.Claims.(*jwt.RegisteredClaims); ok {
+		return token, claims
+	} else {
+		log.Print("invalid claims type")
+		return nil, nil
 	}
-
-	return token
-}
-
-// parseTokenClaimString is a helper for retrieving claims
-// which jwt.Claims and jwt.MapClaims don't provide access to by default.
-func parseTokenClaimString(deviceToken *jwt.Token, claim string) (string, error) {
-	claims, ok := deviceToken.Claims.(jwt.MapClaims)
-	if !ok {
-		return "", fmt.Errorf("error casting to MapClaims")
-	}
-
-	nonce, nonceOk := claims[claim].(string)
-	if !nonceOk {
-		return "", fmt.Errorf("error casting %q", claim)
-	}
-
-	return nonce, nil
 }
