@@ -27,3 +27,9 @@ type LockedToken struct {
 	Username  string
 	Nonce     string `gorm:"unique"`
 }
+
+type RefreshToken struct {
+	ID        string `gorm:"primaryKey"`
+	IssuedAt  time.Time
+	ExpiresAt time.Time
+}

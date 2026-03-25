@@ -103,23 +103,29 @@ func handleSignUp() http.HandlerFunc {
 
 		errMsg := "error completing auth"
 
-		accessCookie, err := createTokenCookie(CookieAccess, username)
+		accessCookie, _, _, err := createTokenCookie(CookieAccess, username)
 		if err != nil {
 			log.Print(err)
 			http.Error(w, errMsg, http.StatusInternalServerError)
 			return
 		}
 
-		refreshCookie, err := createTokenCookie(CookieRefresh, username)
+		refreshCookie, refreshToken, _, err := createTokenCookie(CookieRefresh, username)
 		if err != nil {
 			log.Print(err)
 			http.Error(w, errMsg, http.StatusInternalServerError)
 			return
 		}
 
-		deviceCookie, err := createTokenCookie(CookieDevice, username)
+		deviceCookie, _, _, err := createTokenCookie(CookieDevice, username)
 		if err != nil {
 			log.Print(err)
+			http.Error(w, errMsg, http.StatusInternalServerError)
+			return
+		}
+
+		if err = storeRefreshToken(refreshToken); err != nil {
+			log.Printf("store ref: %v", err)
 			http.Error(w, errMsg, http.StatusInternalServerError)
 			return
 		}
@@ -341,23 +347,29 @@ func handleLogIn() http.HandlerFunc {
 
 		errMsg := "error completing auth"
 
-		accessCookie, err := createTokenCookie(CookieAccess, username)
+		accessCookie, _, _, err := createTokenCookie(CookieAccess, username)
 		if err != nil {
 			log.Print(err)
 			http.Error(w, errMsg, http.StatusInternalServerError)
 			return
 		}
 
-		refreshCookie, err := createTokenCookie(CookieRefresh, username)
+		refreshCookie, refreshToken, _, err := createTokenCookie(CookieRefresh, username)
 		if err != nil {
 			log.Print(err)
 			http.Error(w, errMsg, http.StatusInternalServerError)
 			return
 		}
 
-		deviceCookie, err := createTokenCookie(CookieDevice, username)
+		deviceCookie, _, _, err := createTokenCookie(CookieDevice, username)
 		if err != nil {
 			log.Print(err)
+			http.Error(w, errMsg, http.StatusInternalServerError)
+			return
+		}
+
+		if err = storeRefreshToken(refreshToken); err != nil {
+			log.Printf("store ref: %v", err)
 			http.Error(w, errMsg, http.StatusInternalServerError)
 			return
 		}
@@ -464,4 +476,29 @@ func validateDeviceToken(deviceCookie *http.Cookie, username string) (*jwt.Token
 		log.Print("invalid claims type")
 		return nil, nil
 	}
+}
+
+func storeRefreshToken(token *jwt.Token) error {
+	claims, ok := token.Claims.(jwt.RegisteredClaims)
+	if !ok {
+		return fmt.Errorf("error casting to RegisteredClaims")
+	}
+
+	refreshId := claims.ID
+
+	// Convert the token's UTC time to the local time used by the server.
+	refreshIat := claims.IssuedAt.Time.Local()
+	refreshExp := claims.ExpiresAt.Time.Local()
+
+	storeToken := RefreshToken{
+		ID:        refreshId,
+		IssuedAt:  refreshIat,
+		ExpiresAt: refreshExp,
+	}
+
+	if result := db.Create(&storeToken); result.Error != nil {
+		return result.Error
+	}
+
+	return nil
 }
