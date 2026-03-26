@@ -165,11 +165,11 @@ func handleLogIn() http.HandlerFunc {
 		}
 
 		reqDeviceCookie, _ := r.Cookie(string(CookieDevice))
-		reqDeviceToken, claims := validateDeviceToken(reqDeviceCookie, username)
+		reqDeviceToken, claims := parseToken(CookieDevice, reqDeviceCookie)
 
 		var nonce string
 
-		if reqDeviceToken != nil && claims.ID != "" { // Trusted client
+		if reqDeviceToken != nil && claims.Subject == username && claims.ID != "" { // Trusted client
 			nonce = claims.ID
 
 			var lockedTokens []LockedToken
@@ -380,6 +380,85 @@ func handleLogIn() http.HandlerFunc {
 	}
 }
 
+func handleRefresh() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("%v %q", r.Method, r.URL.String())
+
+		reqRefreshCookie, _ := r.Cookie(string(CookieRefresh))
+		reqRefreshToken, claims := parseToken(CookieRefresh, reqRefreshCookie)
+
+		if reqRefreshToken == nil {
+			http.Error(w, "invalid request", http.StatusBadRequest)
+			return
+		}
+
+		username := claims.Subject
+		refreshId := claims.ID
+		issuedAt := claims.IssuedAt.Time
+		expiresAt := claims.ExpiresAt.Time
+
+		if result := db.Where("expires_at < ?", time.Now()).Delete(&RefreshToken{}); result.RowsAffected > 0 {
+			log.Printf("deleted %d expired refresh tokens", result.RowsAffected)
+		}
+
+		var stored RefreshToken
+
+		query := "id = ? AND username = ?"
+
+		if result := db.First(&stored, query, refreshId, username); result.Error != nil {
+			log.Print("token not found")
+
+			if res := db.Where("username = ?", username).Delete(&RefreshToken{}); res.Error == nil {
+				log.Printf("invalidated all %d refresh tokens for %v", res.RowsAffected, username)
+			}
+
+			log.Print(result.Error)
+			http.Error(w, "invalid auth", http.StatusUnauthorized)
+			return
+		}
+
+		if !issuedAt.Equal(stored.IssuedAt) || !expiresAt.Equal(stored.ExpiresAt) {
+			log.Print("token mismatch")
+
+			if res := db.Where("username = ?", username).Delete(&RefreshToken{}); res.Error == nil {
+				log.Printf("invalidated all %d refresh tokens for %v", res.RowsAffected, username)
+			}
+
+			http.Error(w, "invalid auth", http.StatusUnauthorized)
+			return
+		}
+
+		if result := db.Delete(&stored); result.Error == nil {
+			log.Printf("used %v", stored)
+		}
+
+		errMsg := "error completing auth"
+
+		accessCookie, _, _, err := createTokenCookie(CookieAccess, username)
+		if err != nil {
+			log.Print(err)
+			http.Error(w, errMsg, http.StatusInternalServerError)
+			return
+		}
+
+		refreshCookie, refreshToken, _, err := createTokenCookie(CookieRefresh, username)
+		if err != nil {
+			log.Print(err)
+			http.Error(w, errMsg, http.StatusInternalServerError)
+			return
+		}
+
+		if err = storeRefreshToken(refreshToken); err != nil {
+			log.Printf("store ref: %v", err)
+			http.Error(w, errMsg, http.StatusInternalServerError)
+			return
+		}
+
+		http.SetCookie(w, accessCookie)
+		http.SetCookie(w, refreshCookie)
+	}
+}
+
 func createTokenCookie(name CookieName, username string) (cookie *http.Cookie, token *jwt.Token, tokenJwt string, err error) {
 	var claims jwt.RegisteredClaims
 
@@ -440,7 +519,7 @@ func createTokenCookie(name CookieName, username string) (cookie *http.Cookie, t
 		cookie.Path = "/api"
 		cookie.MaxAge = int(accessDuration.Seconds())
 	case CookieRefresh:
-		cookie.Path = "/api"
+		cookie.Path = "/api/auth/refresh"
 		cookie.MaxAge = int(refreshDuration.Seconds())
 	case CookieDevice:
 		cookie.Path = "/api/auth/login"
@@ -449,9 +528,9 @@ func createTokenCookie(name CookieName, username string) (cookie *http.Cookie, t
 	return
 }
 
-func validateDeviceToken(deviceCookie *http.Cookie, username string) (*jwt.Token, *jwt.RegisteredClaims) {
-	if deviceCookie == nil {
-		log.Print("no device cookie")
+func parseToken(name CookieName, cookie *http.Cookie) (*jwt.Token, *jwt.RegisteredClaims) {
+	if cookie == nil {
+		log.Print("no token cookie")
 		return nil, nil
 	}
 
@@ -462,11 +541,37 @@ func validateDeviceToken(deviceCookie *http.Cookie, username string) (*jwt.Token
 	opts := []jwt.ParserOption{
 		jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}),
 		jwt.WithIssuer("hostmark"),
-		jwt.WithAudience("dev"),
-		jwt.WithSubject(username),
 	}
 
-	token, err := jwt.ParseWithClaims(deviceCookie.Value, &jwt.RegisteredClaims{}, keyfunc, opts...)
+	switch name {
+	case CookieAccess:
+		addl := []jwt.ParserOption{
+			jwt.WithAudience("acc"),
+			jwt.WithIssuedAt(),
+			jwt.WithExpirationRequired(),
+		}
+
+		opts = append(opts, addl...)
+	case CookieRefresh:
+		addl := []jwt.ParserOption{
+			jwt.WithAudience("ref"),
+			jwt.WithIssuedAt(),
+			jwt.WithExpirationRequired(),
+		}
+
+		opts = append(opts, addl...)
+	case CookieDevice:
+		addl := []jwt.ParserOption{
+			jwt.WithAudience("dev"),
+		}
+
+		opts = append(opts, addl...)
+	default:
+		log.Print("invalid cookie name")
+		return nil, nil
+	}
+
+	token, err := jwt.ParseWithClaims(cookie.Value, &jwt.RegisteredClaims{}, keyfunc, opts...)
 	if err != nil {
 		log.Print(err)
 		return nil, nil
@@ -485,6 +590,7 @@ func storeRefreshToken(token *jwt.Token) error {
 	}
 
 	refreshId := claims.ID
+	username := claims.Subject
 
 	// Convert the token's UTC time to the local time used by the server.
 	refreshIat := claims.IssuedAt.Time.Local()
@@ -492,6 +598,7 @@ func storeRefreshToken(token *jwt.Token) error {
 
 	storeToken := RefreshToken{
 		ID:        refreshId,
+		Username:  username,
 		IssuedAt:  refreshIat,
 		ExpiresAt: refreshExp,
 	}

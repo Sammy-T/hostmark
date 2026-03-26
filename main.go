@@ -56,6 +56,7 @@ func main() {
 
 	http.HandleFunc("POST /api/auth/signup", handleSignUp())
 	http.HandleFunc("POST /api/auth/login", handleLogIn())
+	http.HandleFunc("POST /api/auth/refresh", handleRefresh())
 
 	http.HandleFunc("GET /api/dir/{path...}", handleDirPath(cwDir))
 	http.HandleFunc("GET /api/file/{path...}", handleGetPath(cwDir))

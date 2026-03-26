@@ -30,6 +30,7 @@ type LockedToken struct {
 
 type RefreshToken struct {
 	ID        string `gorm:"primaryKey"`
+	Username  string
 	IssuedAt  time.Time
 	ExpiresAt time.Time
 }
