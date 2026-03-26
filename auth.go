@@ -38,7 +38,7 @@ var hashParams pwd.HashParams = pwd.HashParams{
 	KeyLen:  32,
 }
 
-func handleSignUp() http.HandlerFunc {
+func handleSignup() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Printf("%v %q", r.Method, r.URL.String())
 
@@ -136,7 +136,7 @@ func handleSignUp() http.HandlerFunc {
 	}
 }
 
-func handleLogIn() http.HandlerFunc {
+func handleLogin() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Printf("%v %q", r.Method, r.URL.String())
 
@@ -456,6 +456,27 @@ func handleRefresh() http.HandlerFunc {
 
 		http.SetCookie(w, accessCookie)
 		http.SetCookie(w, refreshCookie)
+	}
+}
+
+func handleLogout() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("%v %q", r.Method, r.URL.String())
+
+		unsetAccess := &http.Cookie{
+			Name:   string(CookieAccess),
+			Path:   "/api",
+			MaxAge: 0,
+		}
+
+		unsetRefresh := &http.Cookie{
+			Name:   string(CookieRefresh),
+			Path:   "/api/auth/refresh",
+			MaxAge: 0,
+		}
+
+		http.SetCookie(w, unsetAccess)
+		http.SetCookie(w, unsetRefresh)
 	}
 }
 
