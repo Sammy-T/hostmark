@@ -404,7 +404,7 @@ func createTokenCookie(name CookieName, username string) (cookie *http.Cookie, t
 			Subject:   username,
 			ID:        refreshId.String(),
 			IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(accessDuration).UTC()),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(refreshDuration).UTC()),
 		}
 	case CookieDevice:
 		nonceBytes := pwd.GenerateRandBytes(32)
