@@ -67,6 +67,8 @@ func main() {
 	mux.HandleFunc("POST /api/file/{path...}", handlePostPath(cwDir))
 	mux.HandleFunc("DELETE /api/file/{path...}", handleDelPath(cwDir))
 
+	mux.HandleFunc("GET /api/account/me", handleGetMe())
+
 	addr := ":3000"
 
 	log.Printf("Serving hostmark on %v", addr)
