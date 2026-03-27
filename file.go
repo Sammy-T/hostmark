@@ -75,8 +75,14 @@ func handleDirPath(cwDir string) http.HandlerFunc {
 			pathEntries = append(pathEntries, p)
 		}
 
-		jsonBytes, err := json.Marshal(pathEntries)
-		w.Write(jsonBytes)
+		resp, err := json.Marshal(pathEntries)
+		if err != nil {
+			log.Printf("error creating response: %v", err)
+			http.Error(w, "data error", http.StatusInternalServerError)
+			return
+		}
+
+		w.Write(resp)
 	}
 }
 
