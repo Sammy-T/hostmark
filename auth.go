@@ -40,8 +40,6 @@ var hashParams pwd.HashParams = pwd.HashParams{
 
 func handleSignup() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("%v %q", r.Method, r.URL.String())
-
 		err := r.ParseForm()
 		if err != nil {
 			log.Printf("parse form: %v", err)
@@ -138,8 +136,6 @@ func handleSignup() http.HandlerFunc {
 
 func handleLogin() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("%v %q", r.Method, r.URL.String())
-
 		err := r.ParseForm()
 		if err != nil {
 			log.Printf("parse form: %v", err)
@@ -382,8 +378,6 @@ func handleLogin() http.HandlerFunc {
 
 func handleRefresh() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("%v %q", r.Method, r.URL.String())
-
 		reqRefreshCookie, _ := r.Cookie(string(CookieRefresh))
 		reqRefreshToken, claims := parseToken(CookieRefresh, reqRefreshCookie)
 
@@ -461,8 +455,6 @@ func handleRefresh() http.HandlerFunc {
 
 func handleLogout() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("%v %q", r.Method, r.URL.String())
-
 		unsetAccess := &http.Cookie{
 			Name:   string(CookieAccess),
 			Path:   "/api",

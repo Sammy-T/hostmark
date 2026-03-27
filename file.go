@@ -20,8 +20,6 @@ func handleDirPath(cwDir string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		urlPath := r.PathValue("path")
 
-		log.Printf("%v %q %q", r.Method, r.URL.String(), urlPath)
-
 		entries, err := os.ReadDir(filepath.Join(cwDir, ".files", urlPath))
 		if err != nil {
 			log.Printf("read dir: %v", err)
@@ -48,8 +46,6 @@ func handleDirPath(cwDir string) http.HandlerFunc {
 func handleGetPath(cwDir string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		urlPath := r.PathValue("path")
-
-		log.Printf("%v %q %q", r.Method, r.URL.String(), urlPath)
 
 		p := filepath.Join(cwDir, ".files", urlPath)
 
@@ -90,8 +86,6 @@ func handlePostPath(cwDir string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		urlPath := r.PathValue("path")
 
-		log.Printf("%v %q %q", r.Method, r.URL.String(), urlPath)
-
 		body, err := io.ReadAll(r.Body)
 		r.Body.Close()
 
@@ -120,8 +114,6 @@ func handlePostPath(cwDir string) http.HandlerFunc {
 func handleDelPath(cwDir string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		urlPath := r.PathValue("path")
-
-		log.Printf("%v %q %q", r.Method, r.URL.String(), urlPath)
 
 		if err := os.Remove(filepath.Join(cwDir, ".files", urlPath)); err != nil {
 			log.Printf("remove file: %v", err)
