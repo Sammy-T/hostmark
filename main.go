@@ -96,6 +96,9 @@ func buildSite(pkgManager string) {
 	}
 }
 
+// logRequest is middleware to log incoming request information.
+//
+// Note: Non-API routes are not logged.
 func logRequest(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		reqUrl := r.URL.String()

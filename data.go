@@ -4,6 +4,7 @@ import (
 	"time"
 
 	dbExt "github.com/sammy-t/hostmark/db"
+	"github.com/sammy-t/hostmark/internal/auth"
 )
 
 type User struct {
@@ -12,6 +13,7 @@ type User struct {
 	PwdHash      string
 	Salt         string
 	LockdownTime *time.Time
+	Role         auth.Role `gorm:"default:user"`
 }
 
 type FailedLogin struct {

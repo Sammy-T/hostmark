@@ -9,6 +9,9 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+
+	"github.com/sammy-t/hostmark/internal/auth"
+	"gorm.io/gorm"
 )
 
 type PathEntry struct {
@@ -18,6 +21,40 @@ type PathEntry struct {
 
 func handleDirPath(cwDir string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		accessCookie, _ := r.Cookie(string(CookieAccess))
+		accessToken, claims := parseToken(CookieAccess, accessCookie)
+
+		if accessToken == nil {
+			http.Error(w, "auth required", http.StatusUnauthorized)
+			return
+		}
+
+		var user User
+
+		if result := db.Where("username = ?", claims.Subject).First(&user); result.Error != nil {
+			msg := "data error"
+			code := http.StatusInternalServerError
+
+			if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+				msg = "invalid auth"
+				code = http.StatusBadRequest
+			}
+
+			log.Printf("find user: %v", result.Error)
+			http.Error(w, msg, code)
+			return
+		}
+
+		ruleArgs := auth.RuleArgs{
+			User: user.Username,
+		}
+
+		if granted := auth.Access(user.Role, auth.ResFile, auth.PermRead, ruleArgs); !granted {
+			log.Printf("access denied of %v to %v", auth.ResFile, user.Username)
+			http.Error(w, "access denied", http.StatusForbidden)
+			return
+		}
+
 		urlPath := r.PathValue("path")
 
 		entries, err := os.ReadDir(filepath.Join(cwDir, ".files", urlPath))
@@ -45,6 +82,40 @@ func handleDirPath(cwDir string) http.HandlerFunc {
 
 func handleGetPath(cwDir string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		accessCookie, _ := r.Cookie(string(CookieAccess))
+		accessToken, claims := parseToken(CookieAccess, accessCookie)
+
+		if accessToken == nil {
+			http.Error(w, "auth required", http.StatusUnauthorized)
+			return
+		}
+
+		var user User
+
+		if result := db.Where("username = ?", claims.Subject).First(&user); result.Error != nil {
+			msg := "data error"
+			code := http.StatusInternalServerError
+
+			if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+				msg = "invalid auth"
+				code = http.StatusBadRequest
+			}
+
+			log.Printf("find user: %v", result.Error)
+			http.Error(w, msg, code)
+			return
+		}
+
+		ruleArgs := auth.RuleArgs{
+			User: user.Username,
+		}
+
+		if granted := auth.Access(user.Role, auth.ResFile, auth.PermRead, ruleArgs); !granted {
+			log.Printf("access denied of %v to %v", auth.ResFile, user.Username)
+			http.Error(w, "access denied", http.StatusForbidden)
+			return
+		}
+
 		urlPath := r.PathValue("path")
 
 		p := filepath.Join(cwDir, ".files", urlPath)
@@ -84,6 +155,40 @@ func handleGetPath(cwDir string) http.HandlerFunc {
 
 func handlePostPath(cwDir string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		accessCookie, _ := r.Cookie(string(CookieAccess))
+		accessToken, claims := parseToken(CookieAccess, accessCookie)
+
+		if accessToken == nil {
+			http.Error(w, "auth required", http.StatusUnauthorized)
+			return
+		}
+
+		var user User
+
+		if result := db.Where("username = ?", claims.Subject).First(&user); result.Error != nil {
+			msg := "data error"
+			code := http.StatusInternalServerError
+
+			if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+				msg = "invalid auth"
+				code = http.StatusBadRequest
+			}
+
+			log.Printf("find user: %v", result.Error)
+			http.Error(w, msg, code)
+			return
+		}
+
+		ruleArgs := auth.RuleArgs{
+			User: user.Username,
+		}
+
+		if granted := auth.Access(user.Role, auth.ResFile, auth.PermUpdate, ruleArgs); !granted {
+			log.Printf("access denied of %v to %v", auth.ResFile, user.Username)
+			http.Error(w, "access denied", http.StatusForbidden)
+			return
+		}
+
 		urlPath := r.PathValue("path")
 
 		body, err := io.ReadAll(r.Body)
@@ -113,6 +218,40 @@ func handlePostPath(cwDir string) http.HandlerFunc {
 
 func handleDelPath(cwDir string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		accessCookie, _ := r.Cookie(string(CookieAccess))
+		accessToken, claims := parseToken(CookieAccess, accessCookie)
+
+		if accessToken == nil {
+			http.Error(w, "auth required", http.StatusUnauthorized)
+			return
+		}
+
+		var user User
+
+		if result := db.Where("username = ?", claims.Subject).First(&user); result.Error != nil {
+			msg := "data error"
+			code := http.StatusInternalServerError
+
+			if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+				msg = "invalid auth"
+				code = http.StatusBadRequest
+			}
+
+			log.Printf("find user: %v", result.Error)
+			http.Error(w, msg, code)
+			return
+		}
+
+		ruleArgs := auth.RuleArgs{
+			User: user.Username,
+		}
+
+		if granted := auth.Access(user.Role, auth.ResFile, auth.PermDelete, ruleArgs); !granted {
+			log.Printf("access denied of %v to %v", auth.ResFile, user.Username)
+			http.Error(w, "access denied", http.StatusForbidden)
+			return
+		}
+
 		urlPath := r.PathValue("path")
 
 		if err := os.Remove(filepath.Join(cwDir, ".files", urlPath)); err != nil {
