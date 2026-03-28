@@ -9,11 +9,11 @@ import (
 
 type User struct {
 	dbExt.Model
-	Username     string `gorm:"unique"`
-	PwdHash      string
-	Salt         string
-	LockdownTime *time.Time
-	Role         auth.Role `gorm:"default:user"`
+	Username     string     `gorm:"unique" json:"username"`
+	PwdHash      string     `json:"-"`
+	Salt         string     `json:"-"`
+	LockdownTime *time.Time `json:"-"`
+	Role         auth.Role  `gorm:"default:user" json:"role"`
 }
 
 type FailedLogin struct {
