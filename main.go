@@ -68,6 +68,7 @@ func main() {
 	mux.HandleFunc("DELETE /api/file/{path...}", handleDelPath(cwDir))
 
 	mux.HandleFunc("GET /api/account/me", handleGetMe())
+	mux.HandleFunc("GET /api/account/{username}", handleGetUser())
 
 	addr := ":3000"
 
