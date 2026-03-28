@@ -50,7 +50,7 @@ func handleDirPath(cwDir string) http.HandlerFunc {
 		}
 
 		if granted := auth.Access(user.Role, auth.ResFile, auth.PermRead, ruleArgs); !granted {
-			log.Printf("access denied of %v to %v", auth.ResFile, user.Username)
+			log.Printf("access denied for %v to %v", auth.ResFile, user.Username)
 			http.Error(w, "access denied", http.StatusForbidden)
 			return
 		}
@@ -117,7 +117,7 @@ func handleGetPath(cwDir string) http.HandlerFunc {
 		}
 
 		if granted := auth.Access(user.Role, auth.ResFile, auth.PermRead, ruleArgs); !granted {
-			log.Printf("access denied of %v to %v", auth.ResFile, user.Username)
+			log.Printf("access denied for %v to %v", auth.ResFile, user.Username)
 			http.Error(w, "access denied", http.StatusForbidden)
 			return
 		}
@@ -190,7 +190,7 @@ func handlePostPath(cwDir string) http.HandlerFunc {
 		}
 
 		if granted := auth.Access(user.Role, auth.ResFile, auth.PermUpdate, ruleArgs); !granted {
-			log.Printf("access denied of %v to %v", auth.ResFile, user.Username)
+			log.Printf("access denied for %v to %v", auth.ResFile, user.Username)
 			http.Error(w, "access denied", http.StatusForbidden)
 			return
 		}
@@ -253,7 +253,7 @@ func handleDelPath(cwDir string) http.HandlerFunc {
 		}
 
 		if granted := auth.Access(user.Role, auth.ResFile, auth.PermDelete, ruleArgs); !granted {
-			log.Printf("access denied of %v to %v", auth.ResFile, user.Username)
+			log.Printf("access denied for %v to %v", auth.ResFile, user.Username)
 			http.Error(w, "access denied", http.StatusForbidden)
 			return
 		}

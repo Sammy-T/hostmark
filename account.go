@@ -41,7 +41,7 @@ func handleGetMe() http.HandlerFunc {
 		}
 
 		if granted := auth.Access(user.Role, auth.ResAcct, auth.PermRead, ruleArgs); !granted {
-			log.Printf("access denied of %v to %v", auth.ResAcct, user.Username)
+			log.Printf("access denied for %v to %v", auth.ResAcct, user.Username)
 			http.Error(w, "access denied", http.StatusForbidden)
 			return
 		}
@@ -95,7 +95,7 @@ func handleGetUser() http.HandlerFunc {
 		}
 
 		if granted := auth.Access(user.Role, auth.ResAcct, auth.PermRead, ruleArgs); !granted {
-			log.Printf("access denied of %v to %v", auth.ResAcct, user.Username)
+			log.Printf("access denied for %v to %v", auth.ResAcct, user.Username)
 			http.Error(w, "access denied", http.StatusForbidden)
 			return
 		}
