@@ -1,7 +1,9 @@
 <script>
     import Sidebar from '../Sidebar.svelte';
+    import AlertMessage from '../AlertMessage.svelte';
     import { cbLibPlus } from '$lib/util.svelte';
     import { getContext, onMount } from 'svelte';
+    import { goto } from '$app/navigation';
 
     /**
      * @callback onAddFile
@@ -21,9 +23,44 @@
     // @ts-ignore
     let entries = $state([]);
 
+    /** @type {AlertMessage} */
+    let alertMsg;
+    
+    let errText = $state('');
+
+    let retries = 1;
+
     $effect(() => {
         load(workingDir.value);
     });
+
+    async function refreshAuth() {
+        if(!retries) {
+            goto('/login');
+            return;
+        }
+
+        retries--;
+
+        const resp = await fetch('/api/auth/refresh');
+
+        switch(resp.status) {
+            case 200:
+                load(workingDir.value);
+                break;
+
+            case 400:
+            case 401:
+                goto('/login');
+                break;
+
+            default:
+                errText = await resp.text();
+                console.error(errText, resp.status);
+                
+                alertMsg.show();
+        }
+    }
 
     /**
      * @param {string} dir
@@ -31,12 +68,26 @@
     async function load(dir) {
         const resp = await fetch(`/api/dir/${dir}`);
         if(!resp.ok) {
-            console.error('unable to load directory');
+            switch(resp.status) {
+                case 401:
+                    refreshAuth();
+                    break;
+
+                default:
+                    console.error('unable to load directory');
+                    
+                    errText = await resp.text();
+                    console.error(errText, resp.status);
+                
+                    alertMsg.show();
+            }
             return;
         }
 
         entries = await resp.json();
         console.log($state.snapshot(entries));
+
+        retries = 1;
     }
 
     /**
@@ -116,6 +167,10 @@
         </ul>
     </nav>
 </aside>
+
+<AlertMessage type="warning" heading="Error" bind:this={alertMsg}>
+    {errText}
+</AlertMessage>
 
 <style>
     aside {
