@@ -78,6 +78,12 @@
 </div>
 
 <style>
+    input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"]) {
+        height: auto;
+        padding: 0.05rem 0.25rem;
+        margin: 0;
+    }
+
     button {
         margin: 0;
         padding: 0;

@@ -1,9 +1,17 @@
 <script>
+    import AlertMessage from '$lib/components/AlertMessage.svelte';
+    import { goto } from '$app/navigation';
+
     /** @type {HTMLInputElement} */
     let pwd;
 
     /** @type {HTMLInputElement} */
     let confirmPwd;
+
+    /** @type {AlertMessage} */
+    let alertMsg;
+    
+    let errText = $state('');
 
     function validateConfirmPwd() {
         if(pwd.value === confirmPwd.value) {
@@ -20,17 +28,34 @@
     /**
      * @param {SubmitEvent} event
      */
-    function onSubmit(event) {
+    async function onSubmit(event) {
         event.preventDefault();
 
         // @ts-ignore
         const data = new FormData(event.target);
+
+        // @ts-ignore
+        const encoded = new URLSearchParams(data).toString();
+
+        /** @type {RequestInit} */
+        const opts = {
+            method: 'post',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: encoded,
+        };
         
-        let msg = '';
-        for(const [key, value] of data) {
-            msg += `${key}: ${value}\n`;
+        const resp = await fetch('/api/auth/signup', opts);
+        if(!resp.ok) {
+            errText = await resp.text();
+            console.error(errText, resp.status);
+
+            alertMsg.show();
+            return
         }
-        console.log(msg);
+
+        goto('/');
     }
 </script>
 
@@ -51,6 +76,10 @@
     <button type="submit">Sign up</button>
     <small>Already have an account? <a href="/login">Sign in</a></small>
 </form>
+
+<AlertMessage type="warning" heading="Error" bind:this={alertMsg}>
+    {errText}
+</AlertMessage>
 
 <style>
     h3 {
