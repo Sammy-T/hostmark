@@ -28,66 +28,53 @@
     
     let errText = $state('');
 
-    let retries = 1;
-
     $effect(() => {
         load(workingDir.value);
     });
-
-    async function refreshAuth() {
-        if(!retries) {
-            goto('/login');
-            return;
-        }
-
-        retries--;
-
-        const resp = await fetch('/api/auth/refresh');
-
-        switch(resp.status) {
-            case 200:
-                load(workingDir.value);
-                break;
-
-            case 400:
-            case 401:
-                goto('/login');
-                break;
-
-            default:
-                errText = await resp.text();
-                console.error(errText, resp.status);
-                
-                alertMsg.show();
-        }
-    }
 
     /**
      * @param {string} dir
      */
     async function load(dir) {
         const resp = await fetch(`/api/dir/${dir}`);
-        if(!resp.ok) {
-            switch(resp.status) {
-                case 401:
-                    refreshAuth();
-                    break;
 
-                default:
-                    console.error('unable to load directory');
-                    
-                    errText = await resp.text();
-                    console.error(errText, resp.status);
+        switch(resp.status) {
+            case 200:
+                break;
+
+            case 401:
+                const refResp = await fetch('/api/auth/refresh');
+
+                switch(refResp.status) {
+                    case 200:
+                        load(dir);
+                        break;
+
+                    case 400:
+                    case 401:
+                        goto('/login');
+                        break;
+                        
+                    default:
+                        errText = await refResp.text();
+                        console.error(errText, refResp.status);
+
+                        alertMsg.show();
+                }
+                return;
+
+            default:
+                console.error('unable to load directory');
                 
-                    alertMsg.show();
-            }
-            return;
+                errText = await resp.text();
+                console.error(errText, resp.status);
+            
+                alertMsg.show();
+                return;
         }
 
         entries = await resp.json();
         console.log($state.snapshot(entries));
-
-        retries = 1;
     }
 
     /**
