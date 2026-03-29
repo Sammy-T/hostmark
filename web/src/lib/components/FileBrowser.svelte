@@ -3,6 +3,7 @@
     import FileHeader from './file/FileHeader.svelte';
     import FileEditor from './file/FileEditor.svelte';
     import FileNone from './file/FileNone.svelte';
+    import AlertMessage from './AlertMessage.svelte';
     import { setContext } from 'svelte';
     import { page } from '$app/state';
     import { goto, refreshAll } from '$app/navigation';
@@ -23,6 +24,11 @@
     let editedFile = $derived(file);
     let edited = $derived(content?.markdown);
     let addingFile = $state(false);
+
+    /** @type {AlertMessage} */
+    let alertMsg;
+    
+    let errText = $state('');
 
     $effect(() => {
         if(naming.value || editing.value || (editedFile === file && edited === content?.markdown)) return;
@@ -59,9 +65,34 @@
         if(body) opts.body = body;
 
         const resp = await fetch(path, opts);
-        if(!resp.ok) {
-            console.error('unable to submit changes');
-            return false;
+
+        switch(resp.status) {
+            case 200:
+                break;
+
+            case 401:
+                const refResp = await fetch('/api/auth/refresh');
+
+                switch(refResp.status) {
+                    case 200:
+                        return await requestChange(path, method, body);
+
+                    case 400:
+                    case 401:
+                        goto('/login');
+                        return false;
+
+                    default:
+                        errText = await refResp.text();
+                        console.error(errText, refResp.status);
+
+                        alertMsg.show();
+                        return false;
+                }
+
+            default:
+                console.error('unable to submit changes');
+                return false;
         }
 
         return true;
@@ -110,6 +141,10 @@
         {/if}
     </div>
 </div>
+
+<AlertMessage type="warning" heading="Error" bind:this={alertMsg}>
+    {errText}
+</AlertMessage>
 
 <style>
     .browser {
