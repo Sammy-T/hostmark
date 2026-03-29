@@ -50,12 +50,12 @@ func handleSignup() http.HandlerFunc {
 		username := r.PostForm.Get("username")
 		password := r.PostForm.Get("password")
 
-		if !auth.IsValidUsername(username) {
-			err = fmt.Errorf("invalid username")
-		}
-
 		if !auth.IsValidPassword(password) {
 			err = fmt.Errorf("invalid password")
+		}
+
+		if !auth.IsValidUsername(username) {
+			err = fmt.Errorf("invalid username")
 		}
 
 		if err != nil {
@@ -146,12 +146,12 @@ func handleLogin() http.HandlerFunc {
 		username := r.PostForm.Get("username")
 		password := r.PostForm.Get("password")
 
-		if !auth.IsValidUsername(username) {
-			err = fmt.Errorf("invalid username")
-		}
-
 		if !auth.IsValidPassword(password) {
 			err = fmt.Errorf("invalid password")
+		}
+
+		if !auth.IsValidUsername(username) {
+			err = fmt.Errorf("invalid username")
 		}
 
 		if err != nil {
