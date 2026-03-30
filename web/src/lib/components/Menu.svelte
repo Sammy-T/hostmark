@@ -52,12 +52,13 @@
 <nav class="toggle">
     <button popovertarget="mobile-menu">{@html icMenu}</button>
 
-    <!-- TODO: Display addl items based on location -->
     <!-- File page item(s) -->
+    {#if current === 'file'}
     <ul>
         <li><button popovertarget="mobile-file-nav">{@html icFolders}</button></li>
         <li><button onclick={cbLibPlus.cb?.()}>{@html icLibraryPlus}</button></li>
     </ul>
+    {/if}
 </nav>
 
 <!-- Mobile page nav -->
@@ -66,7 +67,7 @@
         <li><button popovertarget="mobile-menu">{@html icClose}</button></li>
         <li>hm</li>
         <li><a href="/">{@html icFiles} Files</a></li>
-        <li><a href="#">{@html icProfile} Profile</a></li>
+        <li><a href="/profile">{@html icProfile} Profile</a></li>
     </ul>
     
     <ul>
@@ -80,7 +81,7 @@
     <ul>
         <li>hm</li>
         <li><a href="/" class:highlight={current === 'file'} use:delayedTip={{ title: 'Files' }}>{@html icFiles}</a></li>
-        <li><a href="#" class:highlight={current === 'profile'} use:delayedTip={{ title: 'Profile' }}>{@html icProfile}</a></li>
+        <li><a href="/profile" class:highlight={current === 'profile'} use:delayedTip={{ title: 'Profile' }}>{@html icProfile}</a></li>
     </ul>
     
     <ul>
@@ -103,6 +104,10 @@
 
         & button:hover {
             color: var(--pico-primary);
+        }
+
+        & > button {
+            padding: 1rem 0.25rem;
         }
     }
 

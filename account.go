@@ -46,12 +46,7 @@ func handleGetMe() http.HandlerFunc {
 			return
 		}
 
-		data := map[string]string{
-			"username": user.Username,
-			"role":     string(user.Role),
-		}
-
-		resp, err := json.Marshal(data)
+		resp, err := json.Marshal(user)
 		if err != nil {
 			log.Printf("error creating response: %v", err)
 			http.Error(w, "data error", http.StatusInternalServerError)
@@ -115,12 +110,7 @@ func handleGetUser() http.HandlerFunc {
 			return
 		}
 
-		data := map[string]string{
-			"username": reqUser.Username,
-			"role":     string(reqUser.Role),
-		}
-
-		resp, err := json.Marshal(data)
+		resp, err := json.Marshal(reqUser)
 		if err != nil {
 			log.Printf("error creating response: %v", err)
 			http.Error(w, "data error", http.StatusInternalServerError)
