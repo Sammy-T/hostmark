@@ -542,7 +542,7 @@ func createTokenCookie(name CookieName, username string) (cookie *http.Cookie, t
 }
 
 func parseToken(name CookieName, cookie *http.Cookie) (*jwt.Token, *jwt.RegisteredClaims) {
-	if cookie == nil {
+	if cookie == nil || cookie.Value == "" {
 		log.Print("no token cookie")
 		return nil, nil
 	}
