@@ -14,6 +14,12 @@ var policy = map[Role]map[Resource]map[Permission]rule{
 			PermUpdate: allow,
 			PermDelete: allow,
 		},
+		ResNote: {
+			PermCreate: allowIfOwner,
+			PermRead:   allowWithVisibility,
+			PermUpdate: allowIfOwner,
+			PermDelete: allowIfOwner,
+		},
 	},
 	RoleUser: {
 		ResAcct: {
@@ -25,6 +31,12 @@ var policy = map[Role]map[Resource]map[Permission]rule{
 			PermRead:   allow,
 			PermUpdate: allow,
 			PermDelete: allow,
+		},
+		ResNote: {
+			PermCreate: allowIfOwner,
+			PermRead:   allowWithVisibility,
+			PermUpdate: allowIfOwner,
+			PermDelete: allowIfOwner,
 		},
 	},
 }

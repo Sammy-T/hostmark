@@ -14,6 +14,7 @@ type User struct {
 	Salt         string     `json:"-"`
 	LockdownTime *time.Time `json:"-"`
 	Role         auth.Role  `gorm:"default:user" json:"role"`
+	Notes        []Note     `gorm:"foreignKey:Owner;references:Username;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"notes"`
 }
 
 type FailedLogin struct {
@@ -35,4 +36,19 @@ type RefreshToken struct {
 	Username  string
 	IssuedAt  time.Time
 	ExpiresAt time.Time
+}
+
+type Tag struct {
+	Name      string    `gorm:"primaryKey" json:"name"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+	Notes     []*Note   `gorm:"many2many:note_tags;" json:"notes"`
+}
+
+type Note struct {
+	dbExt.Model
+	Owner      string `json:"owner"`
+	Visibility string `json:"visibility"`
+	Tags       []*Tag `gorm:"many2many:note_tags;" json:"tags"`
+	Content    string `json:"content"`
 }

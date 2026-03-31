@@ -28,7 +28,7 @@ func init() {
 		log.Fatal(err)
 	}
 
-	db.AutoMigrate(&User{}, &FailedLogin{}, &LockedToken{}, &RefreshToken{})
+	db.AutoMigrate(&User{}, &FailedLogin{}, &LockedToken{}, &RefreshToken{}, &Tag{}, &Note{})
 }
 
 func main() {
@@ -65,6 +65,9 @@ func main() {
 	mux.HandleFunc("GET /api/file/{path...}", handleGetPath(cwDir))
 	mux.HandleFunc("POST /api/file/{path...}", handlePostPath(cwDir))
 	mux.HandleFunc("DELETE /api/file/{path...}", handleDelPath(cwDir))
+
+	mux.HandleFunc("POST /api/note", handleCreateNote())
+	mux.HandleFunc("GET /api/note/list", handleGetNotes())
 
 	mux.HandleFunc("GET /api/account/me", handleGetMe())
 	mux.HandleFunc("GET /api/account/{username}", handleGetUser())

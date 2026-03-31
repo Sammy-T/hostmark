@@ -11,6 +11,7 @@ type Resource string
 
 const (
 	ResFile Resource = "file"
+	ResNote Resource = "note"
 	ResAcct Resource = "acct"
 )
 
