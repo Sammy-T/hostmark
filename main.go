@@ -69,6 +69,7 @@ func main() {
 	mux.HandleFunc("POST /api/note", handleCreateNote())
 	//// TODO: GET/POST/DELETE /api/note/{id}
 	mux.HandleFunc("GET /api/note/{id}", handleGetNote())
+	mux.HandleFunc("POST /api/note/{id}", handleUpdateNote())
 	mux.HandleFunc("GET /api/note/list", handleGetNotes())
 
 	mux.HandleFunc("GET /api/account/me", handleGetMe())

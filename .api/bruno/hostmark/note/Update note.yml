@@ -1,0 +1,29 @@
+info:
+  name: Update note
+  type: http
+  seq: 4
+
+http:
+  method: POST
+  url: "{{SITE_ROOT}}/api/note/{{id}}"
+  body:
+    type: form-urlencoded
+    data:
+      - name: visibility
+        value: "{{?visibility}}"
+      - name: tags
+        value: "{{?tags}}"
+      - name: content
+        value: "{{?content}}"
+  auth: inherit
+
+runtime:
+  variables:
+    - name: id
+      value: "{{?id}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

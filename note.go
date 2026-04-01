@@ -53,6 +53,15 @@ func handleCreateNote() http.HandlerFunc {
 			return
 		}
 
+		visibility := r.PostForm.Get("visibility")
+		content := r.PostForm.Get("content")
+
+		if content == "" || !auth.IsValidVisibility(visibility) {
+			log.Print("no fields to create")
+			http.Error(w, "invalid fields", http.StatusBadRequest)
+			return
+		}
+
 		accessCookie, _ := r.Cookie(string(CookieAccess))
 		accessToken, claims := parseToken(CookieAccess, accessCookie)
 
@@ -77,7 +86,11 @@ func handleCreateNote() http.HandlerFunc {
 			return
 		}
 
-		tagNames := strings.Split(r.PostForm.Get("tags"), ",")
+		var tagNames []string
+
+		if tagStr := r.PostForm.Get("tags"); tagStr != "" {
+			tagNames = strings.Split(tagStr, ",")
+		}
 
 		var tags []*Tag
 
@@ -87,9 +100,12 @@ func handleCreateNote() http.HandlerFunc {
 
 		note := Note{
 			Owner:      user.Username,
-			Visibility: r.PostForm.Get("visibility"),
-			Tags:       tags,
-			Content:    r.PostForm.Get("content"),
+			Visibility: visibility,
+			Content:    content,
+		}
+
+		if len(tags) > 0 {
+			note.Tags = tags
 		}
 
 		if note.Content == "" {
@@ -171,5 +187,108 @@ func handleGetNote() http.HandlerFunc {
 		}
 
 		w.Write(resp)
+	}
+}
+
+func handleUpdateNote() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id, err := strconv.ParseUint(r.PathValue("id"), 10, 64)
+		if err != nil {
+			msg := "invalid note id"
+			log.Print(msg)
+			http.Error(w, msg, http.StatusBadRequest)
+			return
+		}
+
+		if err = r.ParseForm(); err != nil {
+			log.Printf("parse form: %v", err)
+			http.Error(w, "unable to parse request", http.StatusInternalServerError)
+			return
+		}
+
+		updates := make(map[string]any)
+
+		if visibility := r.PostForm.Get("visibility"); auth.IsValidVisibility(visibility) {
+			updates["visibility"] = visibility
+		}
+
+		if content := r.PostForm.Get("content"); content != "" {
+			updates["content"] = content
+		}
+
+		var tagNames []string
+
+		if tagStr := r.PostForm.Get("tags"); tagStr != "" {
+			tagNames = strings.Split(tagStr, ",")
+		}
+
+		if len(updates) == 0 && len(tagNames) == 0 {
+			msg := "invalid fields"
+			log.Print(msg)
+			http.Error(w, msg, http.StatusBadRequest)
+			return
+		}
+
+		accessCookie, _ := r.Cookie(string(CookieAccess))
+		accessToken, claims := parseToken(CookieAccess, accessCookie)
+
+		if accessToken == nil {
+			http.Error(w, "auth required", http.StatusUnauthorized)
+			return
+		}
+
+		var user User
+
+		if result := db.Where("username = ?", claims.Subject).First(&user); result.Error != nil {
+			msg := "data error"
+			code := http.StatusInternalServerError
+
+			if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+				msg = "invalid auth"
+				code = http.StatusBadRequest
+			}
+
+			log.Printf("find user: %v", result.Error)
+			http.Error(w, msg, code)
+			return
+		}
+
+		var note Note
+
+		if result := db.Where("id = ?", id).First(&note); result.Error != nil {
+			http.Error(w, "invalid note id", http.StatusBadRequest)
+			return
+		}
+
+		ruleArgs := auth.RuleArgs{
+			User:  user.Username,
+			Owner: note.Owner,
+		}
+
+		if granted := auth.Access(user.Role, auth.ResNote, auth.PermUpdate, ruleArgs); !granted {
+			log.Printf("access denied for %v to %v", auth.ResNote, user.Username)
+			http.Error(w, "access denied", http.StatusForbidden)
+			return
+		}
+
+		if len(updates) > 0 {
+			if result := db.Model(&note).Updates(updates); result.Error != nil {
+				http.Error(w, "unable to update note", http.StatusInternalServerError)
+				return
+			}
+		}
+
+		if len(tagNames) > 0 {
+			var tags []*Tag
+
+			for _, name := range tagNames {
+				tags = append(tags, &Tag{Name: name})
+			}
+
+			if err = db.Model(&note).Association("Tags").Replace(tags); err != nil {
+				http.Error(w, "unable to update tags", http.StatusInternalServerError)
+				return
+			}
+		}
 	}
 }
