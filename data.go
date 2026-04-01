@@ -48,7 +48,7 @@ type Tag struct {
 type Note struct {
 	dbExt.Model
 	Owner      string `json:"owner"`
-	Visibility string `json:"visibility"`
+	Visibility string `gorm:"default:private" json:"visibility"`
 	Tags       []*Tag `gorm:"many2many:note_tags;" json:"tags"`
 	Content    string `json:"content"`
 }

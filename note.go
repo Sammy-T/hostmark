@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/sammy-t/hostmark/internal/auth"
@@ -104,7 +105,7 @@ func handleCreateNote() http.HandlerFunc {
 			Visibility: note.Visibility,
 		}
 
-		if granted := auth.Access(user.Role, auth.ResNote, auth.PermUpdate, ruleArgs); !granted {
+		if granted := auth.Access(user.Role, auth.ResNote, auth.PermCreate, ruleArgs); !granted {
 			log.Printf("access denied for %v to %v", auth.ResNote, user.Username)
 			http.Error(w, "access denied", http.StatusForbidden)
 			return
@@ -114,5 +115,61 @@ func handleCreateNote() http.HandlerFunc {
 			http.Error(w, "unable to create note", http.StatusInternalServerError)
 			return
 		}
+	}
+}
+
+func handleGetNote() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		accessCookie, _ := r.Cookie(string(CookieAccess))
+		accessToken, claims := parseToken(CookieAccess, accessCookie)
+
+		var user User
+
+		if accessToken != nil {
+			db.Where("username = ?", claims.Subject).First(&user)
+		}
+
+		// The path value string could likely be used without converting
+		// but doing so validates that the provided value is an int.
+		id, err := strconv.ParseUint(r.PathValue("id"), 10, 64)
+		if err != nil {
+			msg := "invalid note id"
+			log.Print(msg)
+			http.Error(w, msg, http.StatusBadRequest)
+			return
+		}
+
+		var note Note
+
+		if result := db.Where("id = ?", id).Preload(clause.Associations).First(&note); result.Error != nil {
+			http.Error(w, "invalid note id", http.StatusBadRequest)
+			return
+		}
+
+		ruleArgs := auth.RuleArgs{
+			User:       user.Username,
+			Owner:      note.Owner,
+			Visibility: note.Visibility,
+		}
+
+		if granted := auth.Access(user.Role, auth.ResNote, auth.PermRead, ruleArgs); !granted {
+			name := "unknown"
+			if user.Username != "" {
+				name = user.Username
+			}
+
+			log.Printf("access denied for %v to %v", auth.ResNote, name)
+			http.Error(w, "access denied", http.StatusForbidden)
+			return
+		}
+
+		resp, err := json.Marshal(note)
+		if err != nil {
+			log.Printf("error creating response: %v", err)
+			http.Error(w, "data error", http.StatusInternalServerError)
+			return
+		}
+
+		w.Write(resp)
 	}
 }

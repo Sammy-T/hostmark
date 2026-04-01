@@ -5,6 +5,7 @@ type Role string
 const (
 	RoleAdmin Role = "admin"
 	RoleUser  Role = "user"
+	RoleNone  Role = "none"
 )
 
 type Resource string
@@ -27,6 +28,10 @@ const (
 // Access processes the corresponding policy rule
 // and returns whether access is granted.
 func Access(role Role, res Resource, perm Permission, args RuleArgs) bool {
+	if role == "" {
+		role = RoleNone
+	}
+
 	rule, ok := policy[role][res][perm]
 
 	return ok && rule(args)

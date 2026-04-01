@@ -39,4 +39,9 @@ var policy = map[Role]map[Resource]map[Permission]rule{
 			PermDelete: allowIfOwner,
 		},
 	},
+	RoleNone: {
+		ResNote: {
+			PermRead: allowWithVisibility,
+		},
+	},
 }
