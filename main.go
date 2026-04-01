@@ -67,9 +67,9 @@ func main() {
 	mux.HandleFunc("DELETE /api/file/{path...}", handleDelPath(cwDir))
 
 	mux.HandleFunc("POST /api/note", handleCreateNote())
-	//// TODO: GET/POST/DELETE /api/note/{id}
 	mux.HandleFunc("GET /api/note/{id}", handleGetNote())
 	mux.HandleFunc("POST /api/note/{id}", handleUpdateNote())
+	mux.HandleFunc("DELETE /api/note/{id}", handleDelNote())
 	mux.HandleFunc("GET /api/note/list", handleGetNotes())
 
 	mux.HandleFunc("GET /api/account/me", handleGetMe())

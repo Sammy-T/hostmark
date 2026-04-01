@@ -292,3 +292,62 @@ func handleUpdateNote() http.HandlerFunc {
 		}
 	}
 }
+
+func handleDelNote() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id, err := strconv.ParseUint(r.PathValue("id"), 10, 64)
+		if err != nil {
+			msg := "invalid note id"
+			log.Print(msg)
+			http.Error(w, msg, http.StatusBadRequest)
+			return
+		}
+
+		accessCookie, _ := r.Cookie(string(CookieAccess))
+		accessToken, claims := parseToken(CookieAccess, accessCookie)
+
+		if accessToken == nil {
+			http.Error(w, "auth required", http.StatusUnauthorized)
+			return
+		}
+
+		var user User
+
+		if result := db.Where("username = ?", claims.Subject).First(&user); result.Error != nil {
+			msg := "data error"
+			code := http.StatusInternalServerError
+
+			if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+				msg = "invalid auth"
+				code = http.StatusBadRequest
+			}
+
+			log.Printf("find user: %v", result.Error)
+			http.Error(w, msg, code)
+			return
+		}
+
+		var note Note
+
+		if result := db.Where("id = ?", id).First(&note); result.Error != nil {
+			http.Error(w, "invalid note id", http.StatusBadRequest)
+			return
+		}
+
+		ruleArgs := auth.RuleArgs{
+			User:  user.Username,
+			Owner: note.Owner,
+		}
+
+		if granted := auth.Access(user.Role, auth.ResNote, auth.PermDelete, ruleArgs); !granted {
+			log.Printf("access denied for %v to %v", auth.ResNote, user.Username)
+			http.Error(w, "access denied", http.StatusForbidden)
+			return
+		}
+
+		if result := db.Delete(&note); result.Error != nil {
+			http.Error(w, "unable to delete note", http.StatusInternalServerError)
+			return
+		}
+	}
+}
