@@ -12,7 +12,7 @@
 
         let msg = '';
         for(const [key, value] of data.entries()) {
-            msg += `${key}: ${value}`;
+            msg += `${key}: ${value}\n`;
         }
         console.log(msg);
     }
@@ -22,8 +22,18 @@
     <form onsubmit={onSubmit}>
         <textarea name="content" placeholder="New Note..." autocapitalize="on" spellcheck required bind:value></textarea>
 
-        <fieldset>
-            <button type="submit" class="secondary" disabled={value === ''}>Save</button>
+        <fieldset disabled={value === ''}>
+            <div>
+                <select name="visibility">
+                    <option value="public">Public</option>
+                    <option value="protected">Protected</option>
+                    <option value="private" selected>Private</option>
+                </select>
+            </div>
+
+            <!-- TODO: tags -->
+
+            <button type="submit" class="secondary">Save</button>
         </fieldset>
     </form>
 </header>
@@ -50,7 +60,14 @@
 
         & fieldset {
             display: flex;
-            justify-content: end;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        & select {
+            padding: 0.25rem 0.5rem;
+            padding-right: calc(var(--pico-form-element-spacing-horizontal) + 0.75rem);
+            background-position: center right 0.25rem;
         }
 
         & button {
