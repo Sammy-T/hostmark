@@ -1,5 +1,5 @@
 <script>
-    import FileBrowser from '$lib/components/FileBrowser.svelte';
+    import FileView from '$lib/components/FileView.svelte';
 </script>
 
-<FileBrowser />
+<FileView />

@@ -135,9 +135,10 @@
 
             {@render pathEntry(href, `${entry.name}${entry.isDir ? '/' : ''}`)}
         {/each}
-</ul>
+    </ul>
 </Sidebar>
 
+<!-- Desktop file nav -->
 <aside>
     <nav>
         <ul data-sveltekit-preload-data="off">

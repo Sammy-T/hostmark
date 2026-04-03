@@ -3,19 +3,26 @@
      * @typedef {Object} Props
      * @property {Boolean} [mobileOnly]
      * @property {Boolean} [desktopOnly]
+     * @property {Boolean} [isMenu]
      * @property {String} [popId]
      * @property {import('svelte').Snippet} children
      */
 
     /** @type {Props} */
-    let { mobileOnly = false, desktopOnly = false, popId, children } = $props();
+    let { mobileOnly = false, desktopOnly = false, isMenu = true, popId, children } = $props();
 </script>
 
 <div id={popId} class:mobile={mobileOnly} class:desktop={desktopOnly} popover={(popId) ? 'auto' : null}>
     <aside class="sidebar">
-        <nav>
-            {@render children()}
-        </nav>
+        {#if isMenu}
+            <nav>
+                {@render children()}
+            </nav>
+        {:else}
+            <div class="sidebar-container">
+                {@render children()}
+            </div>
+        {/if}
     </aside>
 </div>
 
@@ -27,19 +34,23 @@
     }
 
     .sidebar {
-        :global(button) {
-            padding: 0;
-            margin: 0;
-            background-color: transparent;
-            border: none;
-        }
+        max-width: 50dvw;
+        
+        & nav {
+            & :global(button) {
+                padding: 0;
+                margin: 0;
+                background-color: transparent;
+                border: none;
+            }
 
-        :global(button:hover) {
-            color: var(--pico-primary);
-        }
+            & :global(button:hover) {
+                color: var(--pico-primary);
+            }
 
-        :global(a:hover) {
-            text-decoration: none;
+            & :global(a:hover) {
+                text-decoration: none;
+            }
         }
     }
 
@@ -67,6 +78,10 @@
         & :global(li) {
             padding: 0.5rem 0;
         }
+    }
+
+    .sidebar-container {
+        padding: 0.5rem;
     }
 
     .mobile {

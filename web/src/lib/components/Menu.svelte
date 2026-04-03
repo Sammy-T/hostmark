@@ -2,11 +2,13 @@
     import icMenu from '$lib/assets/menu-2.svg?raw';
     import icClose from '$lib/assets/square-x.svg?raw';
     import icFiles from '$lib/assets/book-2.svg?raw';
+    import icNote from '$lib/assets/note.svg?raw';
     import icProfile from '$lib/assets/user-circle.svg?raw';
     import icSettings from '$lib/assets/settings.svg?raw';
     import icSignout from '$lib/assets/logout.svg?raw';
     import icFolders from '$lib/assets/folders.svg?raw';
     import icLibraryPlus from '$lib/assets/library-plus.svg?raw';
+    import icFilter from '$lib/assets/filter-2.svg?raw';
     import Sidebar from './Sidebar.svelte';
     import { cbLibPlus } from '$lib/util.svelte';
     import { page } from '$app/state';
@@ -52,11 +54,16 @@
 <nav class="toggle">
     <button popovertarget="mobile-menu">{@html icMenu}</button>
 
-    <!-- File page item(s) -->
     {#if current === 'file'}
+    <!-- File page item(s) -->
     <ul>
         <li><button popovertarget="mobile-file-nav">{@html icFolders}</button></li>
         <li><button onclick={cbLibPlus.cb?.()}>{@html icLibraryPlus}</button></li>
+    </ul>
+    {:else if current === 'note'}
+    <!-- Note page item(s) -->
+    <ul>
+        <li><button popovertarget="mobile-note-nav">{@html icFilter}</button></li>
     </ul>
     {/if}
 </nav>
@@ -67,6 +74,7 @@
         <li><button popovertarget="mobile-menu">{@html icClose}</button></li>
         <li>hm</li>
         <li><a href="/">{@html icFiles} Files</a></li>
+        <li><a href="/note">{@html icNote} Notes</a></li>
         <li><a href="/profile">{@html icProfile} Profile</a></li>
     </ul>
     
@@ -81,6 +89,7 @@
     <ul>
         <li>hm</li>
         <li><a href="/" class:highlight={current === 'file'} use:delayedTip={{ title: 'Files' }}>{@html icFiles}</a></li>
+        <li><a href="/note" class:highlight={current === 'note'} use:delayedTip={{ title: 'Notes' }}>{@html icNote}</a></li>
         <li><a href="/profile" class:highlight={current === 'profile'} use:delayedTip={{ title: 'Profile' }}>{@html icProfile}</a></li>
     </ul>
     
