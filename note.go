@@ -13,6 +13,34 @@ import (
 	"gorm.io/gorm/clause"
 )
 
+func handleGetTags() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		accessCookie, _ := r.Cookie(string(CookieAccess))
+		accessToken, _ := parseToken(CookieAccess, accessCookie)
+
+		if accessToken == nil {
+			http.Error(w, "auth required", http.StatusUnauthorized)
+			return
+		}
+
+		var tags []Tag
+
+		if result := db.Find(&tags); result.Error != nil {
+			http.Error(w, "data error", http.StatusInternalServerError)
+			return
+		}
+
+		resp, err := json.Marshal(tags)
+		if err != nil {
+			log.Printf("error creating response: %v", err)
+			http.Error(w, "data error", http.StatusInternalServerError)
+			return
+		}
+
+		w.Write(resp)
+	}
+}
+
 func handleGetNotes() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		accessCookie, _ := r.Cookie(string(CookieAccess))
@@ -89,11 +117,7 @@ func handleCreateNote() http.HandlerFunc {
 			return
 		}
 
-		var tagNames []string
-
-		if tagStr := r.PostForm.Get("tags"); tagStr != "" {
-			tagNames = strings.Split(tagStr, ",")
-		}
+		tagNames := r.PostForm["tags"]
 
 		var tags []*Tag
 

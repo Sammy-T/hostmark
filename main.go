@@ -72,6 +72,8 @@ func main() {
 	mux.HandleFunc("DELETE /api/note/{id}", handleDelNote())
 	mux.HandleFunc("GET /api/note/list", handleGetNotes())
 
+	mux.HandleFunc("GET /api/tags", handleGetTags())
+
 	mux.HandleFunc("GET /api/account/me", handleGetMe())
 	mux.HandleFunc("GET /api/account/{username}", handleGetUser())
 	mux.HandleFunc("GET /api/account/list", handleGetUsers())
