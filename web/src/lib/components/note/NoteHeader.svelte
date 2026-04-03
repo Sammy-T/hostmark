@@ -4,11 +4,12 @@
     import AlertMessage from '../AlertMessage.svelte';
     import { goto, invalidateAll } from '$app/navigation';
     import { onMount } from 'svelte';
+    import { SvelteSet } from 'svelte/reactivity';
 
     let value = $state('');
 
-    /** @type {string[]} */
-    let tags = $state([]);
+    /** @type {SvelteSet<string>}*/
+    let tags = new SvelteSet();
 
     /** @type {HTMLFormElement} */
     let form;
@@ -27,8 +28,10 @@
 
         const respJson = await resp.json();
 
+        tags.clear();
+        
         // @ts-ignore
-        tags = respJson.map((tag) => tag.name);
+        respJson.forEach((tag) => tags.add(tag.name));
     }
 
     /**
@@ -42,7 +45,7 @@
 
         const tag = data.get('tag');
 
-        if(tag) tags = [...tags, tag.toString()];
+        if(tag) tags.add(tag.toString());
 
         /** @type {HTMLElement} */
         // @ts-ignore
@@ -144,7 +147,7 @@
                 <fieldset>
                     <legend>Tags <button type="button" class="secondary" popovertarget="tag-input">{@html icPlus}</button></legend>
 
-                    {#each tags as tag}
+                    {#each tags.values() as tag}
                         {@render tagItem(tag)}
                     {/each}
                 </fieldset>
