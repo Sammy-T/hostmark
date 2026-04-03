@@ -1,18 +1,25 @@
 <script>
     import NoteHeader from './NoteHeader.svelte';
     import Note from './Note.svelte';
+    import { page } from '$app/state';
+
+    let notes = $derived(page.data.notes);
+
+    $effect(() => {
+        console.log($state.snapshot(notes));
+    });
 </script>
 
 <section>
     <NoteHeader />
 
-    {#each { length: 50 } as _, i }
-    <Note content={`note-${i+1}`} />
+    {#each notes as note (note.id)}
+        <Note {note} />
+    {:else}
+        <div class="empty-view">
+            <h3>No notes found.</h3>
+        </div>
     {/each}
-
-    <!-- <div class="empty-view">
-        <h3>No notes found.</h3>
-    </div> -->
 </section>
 
 <style>
@@ -25,10 +32,10 @@
         gap: 0.75rem;
         overflow: auto;
 
-        /* & .empty-view {
+        & .empty-view {
             flex-grow: 1;
             align-content: center;
             text-align: center;
-        } */
+        }
     }
 </style>
