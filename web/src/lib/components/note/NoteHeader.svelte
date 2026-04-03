@@ -1,25 +1,77 @@
 <script>
+    import AlertMessage from '../AlertMessage.svelte';
+    import { goto, invalidateAll } from '$app/navigation';
+
     let value = $state('');
+
+    /** @type {HTMLFormElement} */
+    let form;
+
+    /** @type {AlertMessage} */
+    let alertMsg;
+    
+    let errText = $state('');
 
     /**
      * @param {SubmitEvent} event
      */
-    function onSubmit(event) {
+    async function onSubmit(event) {
         event.preventDefault();
 
         // @ts-ignore
         const data = new FormData(event.target);
 
-        let msg = '';
-        for(const [key, value] of data.entries()) {
-            msg += `${key}: ${value}\n`;
+        // @ts-ignore
+        const encoded = new URLSearchParams(data).toString();
+
+        /** @type {RequestInit} */
+        const opts = {
+            method: 'post',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: encoded,
+        };
+
+        let resp = await fetch('/api/note', opts);
+
+        switch(resp.status) {
+            case 200:
+                break;
+            
+            case 401:
+                const refResp = await fetch('/api/auth/refresh');
+
+                switch(refResp.status) {
+                    case 200:
+                        onSubmit(event);
+                        return;
+
+                    case 400:
+                    case 401:
+                        goto('/login');
+                        return;
+
+                    default:
+                        errText = await refResp.text();
+                        console.error(errText, refResp.status);
+
+                        alertMsg.show();
+                        return;
+                }
+            
+            default:
+                console.error('unable to submit note');
+                return;
         }
-        console.log(msg);
+
+        form.reset();
+        invalidateAll();
     }
 </script>
 
 <header>
-    <form onsubmit={onSubmit}>
+    <form onsubmit={onSubmit} bind:this={form}>
         <textarea name="content" placeholder="New Note..." autocapitalize="on" spellcheck required bind:value></textarea>
 
         <fieldset disabled={value === ''}>
@@ -37,6 +89,10 @@
         </fieldset>
     </form>
 </header>
+
+<AlertMessage type="warning" heading="Error" bind:this={alertMsg}>
+    {errText}
+</AlertMessage>
 
 <style>
     header {

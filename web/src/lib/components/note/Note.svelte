@@ -5,6 +5,7 @@
     import icMore from '$lib/assets/dots-vertical.svg?raw';
     import icEdit from '$lib/assets/edit.svg?raw';
     import icTrash from '$lib/assets/trash.svg?raw';
+    import { marked } from 'marked';
 
     let { note } = $props();
 
@@ -35,8 +36,9 @@
         </div>
     </header>
 
-    <!-- TODO: markdown -->
-    {note.content}
+    {#await marked.parse(note.content) then parsed}
+        {@html parsed}
+    {/await}
 
     {#if note.tags.length > 0}
         <hr class="separator">

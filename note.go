@@ -28,9 +28,12 @@ func handleGetNotes() http.HandlerFunc {
 
 		// Adjust the database query according to whether the request has auth
 		if accessToken != nil && user.Username != "" {
-			db.Where("owner = ? OR visibility IN ?", user.Username, []string{"protected", "public"}).Preload(clause.Associations).Find(&notes)
+			query := "owner = ? OR visibility IN ?"
+			visibilities := []string{"protected", "public"}
+
+			db.Where(query, user.Username, visibilities).Preload(clause.Associations).Order("created_at DESC").Find(&notes)
 		} else {
-			db.Where("visibility = ?", "public").Preload(clause.Associations).Find(&notes)
+			db.Where("visibility = ?", "public").Preload(clause.Associations).Order("created_at DESC").Find(&notes)
 		}
 
 		resp, err := json.Marshal(notes)
