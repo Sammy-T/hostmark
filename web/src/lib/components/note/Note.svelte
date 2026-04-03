@@ -16,7 +16,9 @@
     <header>
         <small>{new Intl.DateTimeFormat().format(new Date(note.created_at))}</small>
         
-        <div class="more">
+        <div class="side">
+            <small>{note.owner}</small>
+
             {#if note.visibility === 'public'}
                 {@html icPublic}
             {:else if note.visibility === 'protected'}
@@ -104,8 +106,12 @@
                 color: oklch(from var(--pico-contrast) l c h / 0.5);
             }
 
-            .more > :global(svg) {
+            .side > :global(svg) {
                 color: oklch(from var(--pico-contrast) l c h / 0.5);
+            }
+
+            .side > small {
+                margin-right: 0.5rem;
             }
         }
     }
