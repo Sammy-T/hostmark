@@ -9,6 +9,10 @@
     {#each { length: 50 } as _, i }
     <Note content={`note-${i+1}`} />
     {/each}
+
+    <!-- <div class="empty-view">
+        <h3>No notes found.</h3>
+    </div> -->
 </section>
 
 <style>
@@ -20,5 +24,11 @@
         flex-direction: column;
         gap: 0.75rem;
         overflow: auto;
+
+        /* & .empty-view {
+            flex-grow: 1;
+            align-content: center;
+            text-align: center;
+        } */
     }
 </style>
