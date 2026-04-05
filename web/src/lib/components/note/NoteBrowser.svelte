@@ -1,19 +1,15 @@
 <script>
     import NoteHeader from './NoteHeader.svelte';
     import Note from './Note.svelte';
-    import { page } from '$app/state';
+    import { getContext } from 'svelte';
 
-    let notes = $derived(page.data.notes);
-
-    $effect(() => {
-        console.log($state.snapshot(notes));
-    });
+    let notes = getContext('notes');
 </script>
 
 <section>
     <NoteHeader />
 
-    {#each notes as note (note.id)}
+    {#each notes.value as note (note.id)}
         <Note {note} />
     {:else}
         <div class="empty-view">

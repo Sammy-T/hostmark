@@ -3,13 +3,12 @@
     import icPlus from '$lib/assets/plus.svg?raw';
     import AlertMessage from '../AlertMessage.svelte';
     import { goto, invalidateAll } from '$app/navigation';
-    import { onMount } from 'svelte';
+    import { getContext } from 'svelte';
     import { SvelteSet } from 'svelte/reactivity';
 
     let value = $state('');
 
-    /** @type {SvelteSet<string>}*/
-    let tags = new SvelteSet();
+    let tags = $derived(new SvelteSet(getContext('tags')));
 
     /** @type {HTMLFormElement} */
     let form;
@@ -21,18 +20,6 @@
     let alertMsg;
     
     let errText = $state('');
-
-    async function loadTags() {
-        const resp = await fetch('/api/tags');
-        if(!resp.ok) return;
-
-        const respJson = await resp.json();
-
-        tags.clear();
-        
-        // @ts-ignore
-        respJson.forEach((tag) => tags.add(tag.name));
-    }
 
     /**
      * @param {SubmitEvent} event
@@ -111,10 +98,6 @@
         form.reset();
         invalidateAll();
     }
-
-    onMount(() => {
-        loadTags();
-    });
 </script>
 
 {#snippet tagItem(/** @type {string} */ tag)}

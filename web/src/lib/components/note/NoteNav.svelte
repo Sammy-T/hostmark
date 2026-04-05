@@ -1,13 +1,37 @@
 <script>
     import Sidebar from '../Sidebar.svelte';
+    import { getContext } from 'svelte';
+
+    /** @type {import('svelte/reactivity').SvelteSet<string>} */
+    let tags = getContext('tags');
+
+    /** @type {import('svelte/reactivity').SvelteSet<string>} */
+    let selectedTags = getContext('selectedTags');
+
+    /**
+     * @param {Event} event
+     */
+    function tagClicked(event) {
+        event.preventDefault();
+
+        // @ts-ignore
+        const tag = event.target?.innerText;
+
+        if(selectedTags.has(tag)) {
+            selectedTags.delete(tag);
+            return;
+        }
+
+        selectedTags.add(tag);
+    }
 </script>
 
 <!-- Mobile note nav -->
 <Sidebar popId="mobile-note-nav" isMenu={false} mobileOnly>
     <h6>Tags</h6>
     <div class="tags">
-        {#each { length: 5 } as _, i }
-            <a href="#">tag-{i}</a>
+        {#each tags.values() as tag}
+            <a href={`#${tag}`} onclick={tagClicked}>{tag}</a>
         {/each}
     </div>
 </Sidebar>
@@ -16,8 +40,8 @@
 <aside>
     <h6>Tags</h6>
     <div class="tags">
-        {#each { length: 5 } as _, i}
-            <a href="#">tag-{i}</a>
+        {#each tags.values() as tag}
+            <a href={`#${tag}`} onclick={tagClicked}>{tag}</a>
         {/each}
     </div>
 </aside>

@@ -53,15 +53,33 @@ func handleGetNotes() http.HandlerFunc {
 		}
 
 		var notes []Note
+		var authCond *gorm.DB // The query condition corresponding to the request's auth.
 
 		// Adjust the database query according to whether the request has auth
 		if accessToken != nil && user.Username != "" {
-			query := "owner = ? OR visibility IN ?"
-			visibilities := []string{"protected", "public"}
-
-			db.Where(query, user.Username, visibilities).Preload(clause.Associations).Order("created_at DESC").Find(&notes)
+			authCond = db.Where("owner = ? OR visibility IN ?", user.Username, []string{"protected", "public"})
 		} else {
-			db.Where("visibility = ?", "public").Preload(clause.Associations).Order("created_at DESC").Find(&notes)
+			authCond = db.Where("visibility = ?", "public")
+		}
+
+		tags := r.URL.Query()["tags"]
+
+		if len(tags) > 0 {
+			// Gorm doesn't have utilities for querying/filtering by associations.
+			//
+			// See: https://github.com/go-gorm/gorm/issues/3287#issuecomment-908893840
+			db.Preload(clause.Associations).
+				Joins("JOIN note_tags ON note_tags.note_id = notes.id").
+				Joins("JOIN tags ON note_tags.tag_name = tags.name").
+				Where("tags.name in ?", tags).
+				Where(authCond).
+				Order("notes.created_at DESC").
+				Find(&notes)
+		} else {
+			db.Preload(clause.Associations).
+				Where(authCond).
+				Order("created_at DESC").
+				Find(&notes)
 		}
 
 		resp, err := json.Marshal(notes)
