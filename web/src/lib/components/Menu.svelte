@@ -70,7 +70,7 @@
 
 <!-- Mobile page nav -->
 <Sidebar popId="mobile-menu" mobileOnly>
-    <ul>
+    <ul data-sveltekit-preload-data="off">
         <li><button popovertarget="mobile-menu">{@html icClose}</button></li>
         <li>hm</li>
         <li><a href="/">{@html icFiles} Files</a></li>
@@ -78,7 +78,7 @@
         <li><a href="/profile">{@html icProfile} Profile</a></li>
     </ul>
     
-    <ul>
+    <ul data-sveltekit-preload-data="off">
         <li><a href="#">{@html icSettings} Settings</a></li>
         <li><a href="#">{@html icSignout} Sign out</a></li>
     </ul>
@@ -86,14 +86,14 @@
 
 <!-- Desktop page nav -->
 <Sidebar desktopOnly>
-    <ul>
+    <ul data-sveltekit-preload-data="off">
         <li>hm</li>
         <li><a href="/" class:highlight={current === 'file'} use:delayedTip={{ title: 'Files' }}>{@html icFiles}</a></li>
         <li><a href="/note" class:highlight={current === 'note'} use:delayedTip={{ title: 'Notes' }}>{@html icNote}</a></li>
         <li><a href="/profile" class:highlight={current === 'profile'} use:delayedTip={{ title: 'Profile' }}>{@html icProfile}</a></li>
     </ul>
     
-    <ul>
+    <ul data-sveltekit-preload-data="off">
         <li><a href="#" class:highlight={current === 'settings'} use:delayedTip={{ title: 'Settings' }}>{@html icSettings}</a></li>
         <li><a href="#" class:highlight={current === 'signout'} use:delayedTip={{ title: 'Sign out' }}>{@html icSignout}</a></li>
     </ul>
