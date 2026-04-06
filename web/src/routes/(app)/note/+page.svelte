@@ -1,8 +1,10 @@
 <script>
     import NoteNav from '$lib/components/note/NoteNav.svelte';
     import NoteBrowser from '$lib/components/note/NoteBrowser.svelte';
+    import AlertMessage from '$lib/components/AlertMessage.svelte';
     import { SvelteSet } from 'svelte/reactivity';
     import { onMount, setContext } from 'svelte';
+    import { goto } from '$app/navigation';
 
     let notes = $state({ value: [] });
     setContext('notes', notes);
@@ -14,6 +16,13 @@
     /** @type {SvelteSet<string>} */
     let selectedTags = new SvelteSet();
     setContext('selectedTags', selectedTags);
+
+    let wasAuthed = false;
+
+    /** @type {AlertMessage} */
+    let alertMsg;
+    
+    let errText = $state('');
 
     $effect(() => {
         if(selectedTags.values()) loadNotes();
@@ -32,8 +41,6 @@
     }
 
     async function loadNotes() {
-        await fetch('/api/auth/refresh'); //// TODO: Try not to burn through refreshes on each load?
-
         const url = new URL('/api/note/list', location.origin);
 
         selectedTags.forEach((tag) => {
@@ -43,9 +50,35 @@
         let resp = await fetch(url);
         if(!resp.ok) return;
 
-        const data = await resp.json();
+        const { notes: respNotes, authed } = await resp.json();
 
-        notes.value = data;
+        if(!authed && wasAuthed) {
+            wasAuthed = authed;
+
+            const refResp = await fetch('/api/auth/refresh');
+
+            switch(refResp.status) {
+                case 200:
+                    loadNotes();
+                    break;
+
+                case 400:
+                case 401:
+                    goto('/login');
+                    break;
+
+                default:
+                    errText = await refResp.text();
+                    console.error(errText, refResp.status);
+
+                    alertMsg.show();
+                    break;
+            }
+            return;
+        }
+
+        wasAuthed = authed;
+        notes.value = respNotes;
     }
 
     onMount(() => {
@@ -57,6 +90,10 @@
     <NoteNav />
     <NoteBrowser />
 </div>
+
+<AlertMessage type="warning" heading="Error" bind:this={alertMsg}>
+    {errText}
+</AlertMessage>
 
 <style>
     div {

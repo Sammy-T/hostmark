@@ -47,8 +47,10 @@ func handleGetNotes() http.HandlerFunc {
 		var notes []Note
 		var authCond *gorm.DB // The query condition corresponding to the request's auth.
 
+		authed := accessToken != nil && user.Username != ""
+
 		// Adjust the database query according to whether the request has auth
-		if accessToken != nil && user.Username != "" {
+		if authed {
 			authCond = db.Where("owner = ? OR visibility IN ?", user.Username, []string{"protected", "public"})
 		} else {
 			authCond = db.Where("visibility = ?", "public")
@@ -76,7 +78,12 @@ func handleGetNotes() http.HandlerFunc {
 				Find(&notes)
 		}
 
-		resp, err := json.Marshal(notes)
+		data := map[string]any{
+			"authed": authed,
+			"notes":  notes,
+		}
+
+		resp, err := json.Marshal(data)
 		if err != nil {
 			log.Printf("error creating response: %v", err)
 			http.Error(w, "data error", http.StatusInternalServerError)
