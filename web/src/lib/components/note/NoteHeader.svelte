@@ -2,13 +2,22 @@
     import icTags from '$lib/assets/tags.svg?raw';
     import icPlus from '$lib/assets/plus.svg?raw';
     import AlertMessage from '../AlertMessage.svelte';
-    import { goto, invalidateAll } from '$app/navigation';
+    import { goto } from '$app/navigation';
     import { getContext } from 'svelte';
     import { SvelteSet } from 'svelte/reactivity';
 
     let value = $state('');
 
-    let tags = $derived(new SvelteSet(getContext('tags')));
+    /** @type {SvelteSet<string>} */
+    let tags = getContext('tags');
+
+    /** @type {function} */
+    let loadTags = getContext('loadTags');
+
+    /** @type {function} */
+    let loadNotes = getContext('loadNotes');
+
+    let formTags = $derived(new SvelteSet(tags));
 
     /** @type {HTMLFormElement} */
     let form;
@@ -32,7 +41,7 @@
 
         const tag = data.get('tag');
 
-        if(tag) tags.add(tag.toString());
+        if(tag) formTags.add(tag.toString());
 
         /** @type {HTMLElement} */
         // @ts-ignore
@@ -67,6 +76,9 @@
 
         switch(resp.status) {
             case 200:
+                form.reset();
+                loadNotes();
+                loadTags();
                 break;
             
             case 401:
@@ -92,11 +104,7 @@
             
             default:
                 console.error('unable to submit note');
-                return;
         }
-
-        form.reset();
-        invalidateAll();
     }
 </script>
 
@@ -130,7 +138,7 @@
                 <fieldset>
                     <legend>Tags <button type="button" class="secondary" popovertarget="tag-input">{@html icPlus}</button></legend>
 
-                    {#each tags.values() as tag}
+                    {#each formTags.values() as tag}
                         {@render tagItem(tag)}
                     {/each}
                 </fieldset>

@@ -17,6 +17,9 @@
     let selectedTags = new SvelteSet();
     setContext('selectedTags', selectedTags);
 
+    setContext('loadTags', loadTags);
+    setContext('loadNotes', loadNotes);
+
     let wasAuthed = false;
 
     /** @type {AlertMessage} */
@@ -32,7 +35,7 @@
         const resp = await fetch('/api/tags');
         if(!resp.ok) return;
 
-        const respJson = await resp.json();`/api/note/list`
+        const respJson = await resp.json();
 
         tags.clear();
         
@@ -82,7 +85,7 @@
     }
 
     onMount(() => {
-        loadTags(); //// TODO: Reload on note submit
+        loadTags();
     });
 </script>
 
