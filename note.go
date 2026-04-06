@@ -66,13 +66,15 @@ func handleGetNotes() http.HandlerFunc {
 
 		if len(tags) > 0 {
 			// Gorm doesn't have utilities for querying/filtering by associations.
+			// Joins and Grouping must be used instead.
 			//
 			// See: https://github.com/go-gorm/gorm/issues/3287#issuecomment-908893840
 			db.Preload(clause.Associations).
 				Joins("JOIN note_tags ON note_tags.note_id = notes.id").
-				Joins("JOIN tags ON note_tags.tag_name = tags.name").
+				Joins("JOIN tags ON tags.name = note_tags.tag_name").
 				Where("tags.name in ?", tags).
 				Where(authCond).
+				Group("notes.id").
 				Order("notes.created_at DESC").
 				Find(&notes)
 		} else {
