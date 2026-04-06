@@ -5,11 +5,34 @@
     import icMore from '$lib/assets/dots-vertical.svg?raw';
     import icEdit from '$lib/assets/edit.svg?raw';
     import icTrash from '$lib/assets/trash.svg?raw';
+    import icTag from '$lib/assets/tag.svg?raw';
+    import icTagFilled from '$lib/assets/tag-filled.svg?raw';
     import { marked } from 'marked';
+    import { getContext } from 'svelte';
 
     let { note } = $props();
 
+    /** @type {import('svelte/reactivity').SvelteSet<string>} */
+    let selectedTags = getContext('selectedTags');
+
     let menuId = $derived(`note-menu-${note.id}`);
+
+    /**
+     * @param {Event} event
+     */
+    function tagClicked(event) {
+        event.preventDefault();
+
+        // @ts-ignore
+        const tag = event.target?.dataset.tag;
+
+        if(selectedTags.has(tag)) {
+            selectedTags.delete(tag);
+            return;
+        }
+
+        selectedTags.add(tag);
+    }
 </script>
 
 <article>
@@ -48,7 +71,15 @@
     
     <div class="tags">
         {#each note.tags as tag (tag.name)}
-            <a href="#">{tag.name}</a>
+            <a href={`#${tag}`} data-tag={tag.name} onclick={tagClicked}>
+                {#if selectedTags.has(tag.name)}
+                    {@html icTagFilled}
+                {:else}
+                    {@html icTag}
+                {/if}
+
+                {tag.name}
+            </a>
         {/each}
     </div>
 </article>
@@ -124,9 +155,5 @@
         display: flex;
         flex-wrap: wrap;
         gap: 0.4rem;
-
-        & a {
-            text-decoration: underline;
-        }
     }
 </style>

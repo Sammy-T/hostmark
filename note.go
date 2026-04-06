@@ -15,14 +15,6 @@ import (
 
 func handleGetTags() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		accessCookie, _ := r.Cookie(string(CookieAccess))
-		accessToken, _ := parseToken(CookieAccess, accessCookie)
-
-		if accessToken == nil {
-			http.Error(w, "auth required", http.StatusUnauthorized)
-			return
-		}
-
 		var tags []Tag
 
 		if result := db.Find(&tags); result.Error != nil {

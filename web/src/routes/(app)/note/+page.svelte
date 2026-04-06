@@ -16,8 +16,7 @@
     setContext('selectedTags', selectedTags);
 
     $effect(() => {
-        console.log($state.snapshot(selectedTags));
-        if(selectedTags) loadNotes();
+        if(selectedTags.values()) loadNotes();
     });
 
     async function loadTags() {
@@ -33,7 +32,7 @@
     }
 
     async function loadNotes() {
-        await fetch('/api/auth/refresh');
+        await fetch('/api/auth/refresh'); //// TODO: Try not to burn through refreshes on each load?
 
         const url = new URL('/api/note/list', location.origin);
 

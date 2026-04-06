@@ -1,4 +1,6 @@
 <script>
+    import icTag from '$lib/assets/tag.svg?raw';
+    import icTagFilled from '$lib/assets/tag-filled.svg?raw';
     import Sidebar from '../Sidebar.svelte';
     import { getContext } from 'svelte';
 
@@ -15,7 +17,7 @@
         event.preventDefault();
 
         // @ts-ignore
-        const tag = event.target?.innerText;
+        const tag = event.target?.dataset.tag;
 
         if(selectedTags.has(tag)) {
             selectedTags.delete(tag);
@@ -26,12 +28,24 @@
     }
 </script>
 
+{#snippet tagItem(/** @type {string} */ tag)}
+    <a href={`#${tag}`} data-tag={tag} onclick={tagClicked}>
+        {#if selectedTags.has(tag)}
+            {@html icTagFilled}
+        {:else}
+            {@html icTag}
+        {/if}
+
+        {tag}
+    </a>
+{/snippet}
+
 <!-- Mobile note nav -->
 <Sidebar popId="mobile-note-nav" isMenu={false} mobileOnly>
     <h6>Tags</h6>
     <div class="tags">
         {#each tags.values() as tag}
-            <a href={`#${tag}`} onclick={tagClicked}>{tag}</a>
+            {@render tagItem(tag)}
         {/each}
     </div>
 </Sidebar>
@@ -41,7 +55,7 @@
     <h6>Tags</h6>
     <div class="tags">
         {#each tags.values() as tag}
-            <a href={`#${tag}`} onclick={tagClicked}>{tag}</a>
+            {@render tagItem(tag)}
         {/each}
     </div>
 </aside>
@@ -61,8 +75,8 @@
         flex-wrap: wrap;
         gap: 0.4rem;
 
-        & a {
-            text-decoration: underline;
+        & :global(svg) {
+            width: 1rem;
         }
     }
 
