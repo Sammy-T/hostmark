@@ -1,8 +1,7 @@
 <script>
     import Sidebar from '../Sidebar.svelte';
     import AlertMessage from '../AlertMessage.svelte';
-    import { cbLibPlus } from '$lib/util.svelte';
-    import { getContext, onMount } from 'svelte';
+    import { getContext } from 'svelte';
     import { goto } from '$app/navigation';
 
     /**
@@ -112,10 +111,6 @@
                 workingDir.value = newPath;
         }
     }
-
-    onMount(() => {
-        if(onaddfile) cbLibPlus.cb = onaddfile;
-    });
 </script>
 
 {#snippet pathEntry(/** @type {string} */ href, /** @type {string} */ title)}

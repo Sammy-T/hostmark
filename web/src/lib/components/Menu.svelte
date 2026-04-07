@@ -10,7 +10,6 @@
     import icLibraryPlus from '$lib/assets/library-plus.svg?raw';
     import icFilter from '$lib/assets/filter-2.svg?raw';
     import Sidebar from './Sidebar.svelte';
-    import { cbLibPlus } from '$lib/util.svelte';
     import { page } from '$app/state';
 
     let current = $derived((page.url.pathname === '/') ? 'file' : page.url.pathname.split('/').filter((v) => v !== '').at(0));
@@ -58,7 +57,7 @@
     <!-- File page item(s) -->
     <ul>
         <li><button popovertarget="mobile-file-nav">{@html icFolders}</button></li>
-        <li><button onclick={cbLibPlus.cb?.()}>{@html icLibraryPlus}</button></li>
+        <!-- <li><button onclick={cbLibPlus?.()}>{@html icLibraryPlus}</button></li> -->
     </ul>
     {:else if current === 'note'}
     <!-- Note page item(s) -->

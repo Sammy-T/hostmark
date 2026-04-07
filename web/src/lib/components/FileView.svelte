@@ -31,7 +31,7 @@
     let errText = $state('');
 
     $effect(() => {
-        if(naming.value || editing.value || (editedFile === file && edited === content?.markdown)) return;
+        if(naming.value || editing.value || !editedFile || (editedFile === file && edited === content?.markdown)) return;
         submitChanges();
     });
 
