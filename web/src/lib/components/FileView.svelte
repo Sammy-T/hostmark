@@ -127,7 +127,7 @@
 
     <div class="file-view">
         {#if content}
-            {#if file}
+            {#if file || naming.value}
                 <FileHeader bind:editedFile ondeletefile={deleteFile} />
             {/if}
             
