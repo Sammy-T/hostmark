@@ -30,10 +30,18 @@ body {
     margin: auto;
     outline: 1px solid oklch(from var(--pico-contrast) l c h / 0.15);
     overflow: hidden;
+    display: grid;
+    grid-template-rows: auto 1fr;
+}
+
+.page {
+    display: flex;
+    overflow: hidden;
 }
 
 @media (min-width: 768px) {
     body {
-        display: flex;
+        grid-template-columns: auto 1fr;
+        grid-template-rows: unset;
     }
 }

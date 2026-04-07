@@ -106,7 +106,7 @@
     });
 </script>
 
-<div>
+<div class="page">
     <NoteNav />
     <NoteBrowser />
 </div>
@@ -114,9 +114,3 @@
 <AlertMessage type="warning" heading="Error" bind:this={alertMsg}>
     {errText}
 </AlertMessage>
-
-<style>
-    div {
-        display: flex;
-    }
-</style>

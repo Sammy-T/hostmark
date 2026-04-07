@@ -120,7 +120,7 @@
     }
 </script>
 
-<div class="browser">
+<div class="page">
     {#key file}
         <FileNav onaddfile={addFile} />
     {/key}
@@ -147,12 +147,7 @@
 </AlertMessage>
 
 <style>
-    .browser {
-        display: flex;
-    }
-
     .file-view {
-        height: 100dvh;
         flex-grow: 1;
         display: flex;
         flex-direction: column;

@@ -47,8 +47,8 @@
 
 <style>
     section {
-        height: 100dvh;
         padding: 0.5rem;
+        margin: 0;
         flex-grow: 1;
         display: flex;
         flex-direction: column;

@@ -12,6 +12,7 @@
 
 <style>
 	main {
-		flex-grow: 1;
+		display: grid;
+		overflow: hidden;
 	}
 </style>
