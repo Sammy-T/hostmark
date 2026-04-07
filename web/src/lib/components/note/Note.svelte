@@ -7,15 +7,97 @@
     import icTrash from '$lib/assets/trash.svg?raw';
     import icTag from '$lib/assets/tag.svg?raw';
     import icTagFilled from '$lib/assets/tag-filled.svg?raw';
+    import AlertMessage from '../AlertMessage.svelte';
     import { marked } from 'marked';
     import { getContext } from 'svelte';
+    import { goto } from '$app/navigation';
 
     let { note } = $props();
 
     /** @type {import('svelte/reactivity').SvelteSet<string>} */
     let selectedTags = getContext('selectedTags');
 
+    /** @type {function} */
+    let loadNotes = getContext('loadNotes');
+
     let menuId = $derived(`note-menu-${note.id}`);
+
+    let editing = $state(false);
+
+    /** @type {AlertMessage} */
+    let alertMsg;
+    
+    let errText = $state('');
+
+    /**
+     * @param {SubmitEvent} event
+     */
+    async function onSubmitEdit(event) {
+        event.preventDefault();
+
+        // @ts-ignore
+        const data = new FormData(event.target);
+        const content = data.get('content');
+        
+        if(content === note.content) {
+            editing = false;
+            return;
+        }
+
+        // @ts-ignore
+        const encoded = new URLSearchParams(data).toString();
+
+        /** @type {RequestInit} */
+        const opts = {
+            method: 'post',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: encoded,
+        };
+
+        const resp = await fetch(`/api/note/${note.id}`, opts);
+
+        switch(resp.status) {
+            case 200:
+                loadNotes();
+                break;
+
+            case 401:
+                const refResp = await fetch('/api/auth/refresh');
+
+                switch(refResp.status) {
+                    case 200:
+                        onSubmitEdit(event);
+                        return;
+
+                    case 400:
+                    case 401:
+                        goto('/login');
+                        return;
+
+                    default:
+                        errText = await refResp.text();
+                        console.error(errText, refResp.status);
+
+                        alertMsg.show();
+                        editing = false;
+                        return;
+                }
+            
+            default:
+                errText = await resp.text();
+                console.error(errText, resp.status);
+
+                alertMsg.show();
+        }
+
+        editing = false;
+    }
+
+    function toggleEditing() {
+        editing = !editing;
+    }
 
     /**
      * @param {Event} event
@@ -54,16 +136,23 @@
 
             <div id={menuId} popover>
                 <div class="menu-container">
-                    <button popovertarget={menuId}>{@html icEdit} Edit</button>
+                    <button popovertarget={menuId} onclick={toggleEditing}>{@html icEdit} Edit</button>
                     <button popovertarget={menuId}>{@html icTrash} Delete</button>
                 </div>
             </div>
         </div>
     </header>
 
-    {#await marked.parse(note.content) then parsed}
-        {@html parsed}
-    {/await}
+    {#if editing}
+        <form onsubmit={onSubmitEdit}>
+            <textarea name="content">{note.content}</textarea>
+            <button type="submit">Save</button>
+        </form>
+    {:else}
+        {#await marked.parse(note.content) then parsed}
+            {@html parsed}
+        {/await}
+    {/if}
 
     {#if note.tags.length > 0}
         <hr class="separator">
@@ -83,6 +172,10 @@
         {/each}
     </div>
 </article>
+
+<AlertMessage type="warning" heading="Error" bind:this={alertMsg}>
+    {errText}
+</AlertMessage>
 
 <style>
     [popover] {
@@ -144,6 +237,23 @@
             .side > small {
                 margin-right: 0.5rem;
             }
+        }
+    }
+
+    form {
+        padding-bottom: 0.25rem;
+        display: flex;
+        flex-direction: column;
+        align-items: end;
+        gap: 0.5rem;
+
+        & > * {
+            margin: 0;
+        }
+
+        & button {
+            width: auto;
+            padding: 0.25rem 0.5rem;
         }
     }
 
