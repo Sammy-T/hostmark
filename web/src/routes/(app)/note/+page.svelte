@@ -17,6 +17,14 @@
     let selectedTags = new SvelteSet();
     setContext('selectedTags', selectedTags);
 
+    let showLoadNext = $state({ value: false });
+    setContext('showLoadNext', showLoadNext);
+
+    let pagesLoaded = $state({ value: 0 });
+    setContext('pagesLoaded', pagesLoaded);
+
+    const pageSize = 5; //// TODO: TEMP
+
     setContext('loadTags', loadTags);
     setContext('loadNotes', loadNotes);
 
@@ -43,8 +51,11 @@
         respJson.forEach((tag) => tags.add(tag.name));
     }
 
-    async function loadNotes() {
+    async function loadNotes(page = 0) {
         const url = new URL('/api/note/list', location.origin);
+
+        url.searchParams.append('page_size', pageSize.toString());
+        if(page > 0) url.searchParams.append('page', page.toString());
 
         selectedTags.forEach((tag) => {
             url.searchParams.append('tags', tag);
@@ -80,8 +91,14 @@
             return;
         }
 
+        notes.value = (page > 0) ? [...notes.value, ...respNotes] : respNotes;
         wasAuthed = authed;
-        notes.value = respNotes;
+
+        if(respNotes.length > 0) {
+            pagesLoaded.value = (page > 0) ? page : 1;
+        }
+
+        showLoadNext.value = respNotes.length === pageSize;
     }
 
     onMount(() => {
