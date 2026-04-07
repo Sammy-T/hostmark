@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/sammy-t/hostmark/internal/auth"
+	httpExt "github.com/sammy-t/hostmark/internal/http"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -70,11 +71,13 @@ func handleGetNotes() http.HandlerFunc {
 				Where(authCond).
 				Group("notes.id").
 				Order("notes.created_at DESC").
+				Scopes(httpExt.Paginate(r)).
 				Find(&notes)
 		} else {
 			db.Preload(clause.Associations).
 				Where(authCond).
 				Order("created_at DESC").
+				Scopes(httpExt.Paginate(r)).
 				Find(&notes)
 		}
 

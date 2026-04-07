@@ -5,7 +5,14 @@ info:
 
 http:
   method: GET
-  url: "{{SITE_ROOT}}/api/note/list"
+  url: "{{SITE_ROOT}}/api/note/list?page={{?page}}&page_size={{?page size}}"
+  params:
+    - name: page
+      value: "{{?page}}"
+      type: query
+    - name: page_size
+      value: "{{?page size}}"
+      type: query
   auth: inherit
 
 settings:
