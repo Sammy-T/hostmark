@@ -95,6 +95,50 @@
         editing = false;
     }
 
+    async function deleteNote() {
+        /** @type {RequestInit} */
+        const opts = {
+            method: 'delete',
+        };
+
+        const resp = await fetch(`/api/note/${note.id}`, opts);
+
+        switch(resp.status) {
+            case 200:
+                loadNotes();
+                break;
+
+            case 401:
+                const refResp = await fetch('/api/auth/refresh');
+
+                switch(refResp.status) {
+                    case 200:
+                        deleteNote();
+                        return;
+
+                    case 400:
+                    case 401:
+                        goto('/login');
+                        return;
+
+                    default:
+                        errText = await refResp.text();
+                        console.error(errText, refResp.status);
+
+                        alertMsg.show();
+                        editing = false;
+                        return;
+                }
+            
+            default:
+                errText = await resp.text();
+                console.error(errText, resp.status);
+
+                alertMsg.show();
+        }
+
+    }
+
     function toggleEditing() {
         editing = !editing;
     }
@@ -137,7 +181,7 @@
             <div id={menuId} popover>
                 <div class="menu-container">
                     <button popovertarget={menuId} onclick={toggleEditing}>{@html icEdit} Edit</button>
-                    <button popovertarget={menuId}>{@html icTrash} Delete</button>
+                    <button popovertarget={menuId} onclick={deleteNote}>{@html icTrash} Delete</button>
                 </div>
             </div>
         </div>
