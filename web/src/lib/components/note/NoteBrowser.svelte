@@ -1,6 +1,7 @@
 <script>
     import NoteHeader from './NoteHeader.svelte';
     import Note from './Note.svelte';
+    import NoteNone from './NoteNone.svelte';
     import LoadNext from '../LoadNext.svelte';
     import { getContext } from 'svelte';
 
@@ -35,9 +36,7 @@
     {#each notes.value as note (note.id)}
         <Note {note} />
     {:else}
-        <div class="empty-view">
-            <h3>No notes found.</h3>
-        </div>
+        <NoteNone />
     {/each}
 
     {#if showLoadNext.value}
@@ -54,11 +53,5 @@
         flex-direction: column;
         gap: 0.75rem;
         overflow: auto;
-
-        & .empty-view {
-            flex-grow: 1;
-            align-content: center;
-            text-align: center;
-        }
     }
 </style>

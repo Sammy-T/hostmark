@@ -204,15 +204,19 @@
     
     <div class="tags">
         {#each note.tags as tag (tag.name)}
-            <a href={`#${tag}`} data-tag={tag.name} onclick={tagClicked}>
-                {#if selectedTags.has(tag.name)}
-                    {@html icTagFilled}
-                {:else}
-                    {@html icTag}
-                {/if}
+            {#if selectedTags}
+                <a href={`#${tag}`} data-tag={tag.name} onclick={tagClicked}>
+                    {#if selectedTags.has(tag.name)}
+                        {@html icTagFilled}
+                    {:else}
+                        {@html icTag}
+                    {/if}
 
-                {tag.name}
-            </a>
+                    {tag.name}
+                </a>
+            {:else}
+                <span>{@html icTag} {tag.name}</span>
+            {/if}
         {/each}
     </div>
 </article>

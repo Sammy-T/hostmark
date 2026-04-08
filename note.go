@@ -50,10 +50,22 @@ func handleGetNotes() http.HandlerFunc {
 
 		authed := accessToken != nil && user.Username != ""
 
-		// Adjust the database query according to whether the request has auth
-		if authed {
+		username := r.URL.Query().Get("username")
+
+		// Adjust the database query according to whether the request has auth and if a specific user's notes are requested.
+		switch {
+		case username != "" && !authed:
+			http.Error(w, "auth required", http.StatusUnauthorized)
+			return
+		case username != "" && authed && username != user.Username:
+			log.Printf("access denied for %v to %v", auth.ResNote, user.Username)
+			http.Error(w, "access denied", http.StatusForbidden)
+			return
+		case username != "" && authed && username == user.Username:
+			authCond = db.Where("owner = ?", user.Username)
+		case authed:
 			authCond = db.Where("owner = ? OR visibility IN ?", user.Username, []string{"protected", "public"})
-		} else {
+		default:
 			authCond = db.Where("visibility = ?", "public")
 		}
 
