@@ -78,7 +78,7 @@
     </ul>
     
     <ul data-sveltekit-preload-data="off">
-        <li><a href="#">{@html icSettings} Settings</a></li>
+        <li><a href="/settings">{@html icSettings} Settings</a></li>
         <li><a href="#">{@html icSignout} Sign out</a></li>
     </ul>
 </Sidebar>
@@ -93,7 +93,7 @@
     </ul>
     
     <ul data-sveltekit-preload-data="off">
-        <li><a href="#" class:highlight={current === 'settings'} use:delayedTip={{ title: 'Settings' }}>{@html icSettings}</a></li>
+        <li><a href="/settings" class:highlight={current === 'settings'} use:delayedTip={{ title: 'Settings' }}>{@html icSettings}</a></li>
         <li><a href="#" class:highlight={current === 'signout'} use:delayedTip={{ title: 'Sign out' }}>{@html icSignout}</a></li>
     </ul>
 </Sidebar>
