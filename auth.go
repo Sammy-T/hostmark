@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -92,6 +93,7 @@ func handleSignup() http.HandlerFunc {
 			Username: username,
 			PwdHash:  hashed,
 			Salt:     salt,
+			Prefs:    Preferences{NoteVis: "private"},
 		}
 
 		if result := db.Create(&user); result.Error != nil {
@@ -128,9 +130,18 @@ func handleSignup() http.HandlerFunc {
 			return
 		}
 
+		resp, err := json.Marshal(user)
+		if err != nil {
+			log.Printf("error creating response: %v", err)
+			http.Error(w, "data error", http.StatusInternalServerError)
+			return
+		}
+
 		http.SetCookie(w, accessCookie)
 		http.SetCookie(w, refreshCookie)
 		http.SetCookie(w, deviceCookie)
+
+		w.Write(resp)
 	}
 }
 
@@ -236,7 +247,7 @@ func handleLogin() http.HandlerFunc {
 
 		var user User
 
-		if result := db.Where("username = ?", username).First(&user); result.Error != nil {
+		if result := db.Preload("Prefs").Where("username = ?", username).First(&user); result.Error != nil {
 			msg := "data error"
 			code := http.StatusInternalServerError
 
@@ -370,9 +381,18 @@ func handleLogin() http.HandlerFunc {
 			return
 		}
 
+		resp, err := json.Marshal(user)
+		if err != nil {
+			log.Printf("error creating response: %v", err)
+			http.Error(w, "data error", http.StatusInternalServerError)
+			return
+		}
+
 		http.SetCookie(w, accessCookie)
 		http.SetCookie(w, refreshCookie)
 		http.SetCookie(w, deviceCookie)
+
+		w.Write(resp)
 	}
 }
 

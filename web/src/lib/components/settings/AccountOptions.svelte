@@ -1,13 +1,19 @@
+<script>
+    import { PREFS_PROFILE_KEY } from '$lib/util.svelte';
+
+    let prefs = JSON.parse(localStorage.getItem(PREFS_PROFILE_KEY) ?? '')?.prefs;
+</script>
+
 <h2>Account</h2>
 
 <article>
     <form>
         <label>
             Default note visibility
-            <select>
-                <option>public</option>
-                <option>protected</option>
-                <option>private</option>
+            <select name="default-visibility">
+                <option value="public" selected={prefs?.default_visibility === 'public'}>Public</option>
+                <option value="protected" selected={prefs?.default_visibility === 'protected'}>Protected</option>
+                <option value="private" selected={prefs?.default_visibility === 'private'}>Private</option>
             </select>
         </label>
 

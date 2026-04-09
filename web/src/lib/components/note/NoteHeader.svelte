@@ -5,6 +5,7 @@
     import { goto } from '$app/navigation';
     import { getContext } from 'svelte';
     import { SvelteSet } from 'svelte/reactivity';
+    import { PREFS_PROFILE_KEY } from '$lib/util.svelte';
 
     let value = $state('');
 
@@ -18,6 +19,8 @@
     let loadNotes = getContext('loadNotes');
 
     let formTags = $derived(new SvelteSet(tags));
+
+    let prefs = JSON.parse(localStorage.getItem(PREFS_PROFILE_KEY) ?? '')?.prefs;
 
     /** @type {HTMLFormElement} */
     let form;
@@ -124,9 +127,9 @@
 
             <div class="group">
                 <select name="visibility">
-                    <option value="public">Public</option>
-                    <option value="protected">Protected</option>
-                    <option value="private" selected>Private</option>
+                    <option value="public" selected={prefs?.default_visibility === 'public'}>Public</option>
+                    <option value="protected" selected={prefs?.default_visibility === 'protected'}>Protected</option>
+                    <option value="private" selected={prefs?.default_visibility === 'private'}>Private</option>
                 </select>
 
                 <button type="submit" class="secondary">Save</button>

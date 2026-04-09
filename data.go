@@ -9,12 +9,13 @@ import (
 
 type User struct {
 	dbExt.Model
-	Username     string     `gorm:"unique" json:"username"`
-	PwdHash      string     `json:"-"`
-	Salt         string     `json:"-"`
-	LockdownTime *time.Time `json:"-"`
-	Role         auth.Role  `gorm:"default:user" json:"role"`
-	Notes        []Note     `gorm:"foreignKey:Owner;references:Username;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"notes"`
+	Username     string      `gorm:"unique" json:"username"`
+	PwdHash      string      `json:"-"`
+	Salt         string      `json:"-"`
+	LockdownTime *time.Time  `json:"-"`
+	Role         auth.Role   `gorm:"default:user" json:"role"`
+	Prefs        Preferences `gorm:"OnUpdate:CASCADE,OnDelete:CASCADE;" json:"prefs"`
+	Notes        []Note      `gorm:"foreignKey:Owner;references:Username;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"notes,omitempty"`
 }
 
 type FailedLogin struct {
@@ -51,4 +52,10 @@ type Note struct {
 	Visibility string `gorm:"default:private" json:"visibility"`
 	Tags       []*Tag `gorm:"many2many:note_tags;" json:"tags"`
 	Content    string `json:"content"`
+}
+
+type Preferences struct {
+	ID      uint   `gorm:"primaryKey" json:"id"`
+	UserID  uint   `json:"user_id"`
+	NoteVis string `gorm:"default:private" json:"default_visibility"`
 }

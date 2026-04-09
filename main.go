@@ -28,7 +28,7 @@ func init() {
 		log.Fatal(err)
 	}
 
-	db.AutoMigrate(&User{}, &FailedLogin{}, &LockedToken{}, &RefreshToken{}, &Tag{}, &Note{})
+	db.AutoMigrate(&User{}, &FailedLogin{}, &LockedToken{}, &RefreshToken{}, &Tag{}, &Note{}, &Preferences{})
 }
 
 func main() {
