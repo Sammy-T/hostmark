@@ -14,7 +14,7 @@ type User struct {
 	Salt         string      `json:"-"`
 	LockdownTime *time.Time  `json:"-"`
 	Role         auth.Role   `gorm:"default:user" json:"role"`
-	Prefs        Preferences `gorm:"OnUpdate:CASCADE,OnDelete:CASCADE;" json:"prefs"`
+	Prefs        Preferences `gorm:"foreignKey:User;references:Username;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"prefs"`
 	Notes        []Note      `gorm:"foreignKey:Owner;references:Username;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"notes,omitempty"`
 }
 
@@ -56,6 +56,6 @@ type Note struct {
 
 type Preferences struct {
 	ID      uint   `gorm:"primaryKey" json:"id"`
-	UserID  uint   `json:"user_id"`
+	User    string `json:"user"`
 	NoteVis string `gorm:"default:private" json:"default_visibility"`
 }

@@ -174,3 +174,83 @@ func handleGetUsers() http.HandlerFunc {
 		w.Write(resp)
 	}
 }
+
+func handleUpdateUser() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if err := r.ParseForm(); err != nil {
+			log.Printf("parse form: %v", err)
+			http.Error(w, "unable to parse request", http.StatusInternalServerError)
+			return
+		}
+
+		reqUsername := r.PathValue("username")
+		if reqUsername == "" {
+			msg := "invalid user"
+			log.Print(msg)
+			http.Error(w, msg, http.StatusBadRequest)
+			return
+		}
+
+		updates := make(map[string]any)
+		prefUpdates := make(map[string]any)
+
+		if visibility := r.PostForm.Get("default-visibility"); auth.IsValidVisibility(visibility) {
+			prefUpdates["note_vis"] = visibility
+		}
+
+		if len(updates) == 0 && len(prefUpdates) == 0 {
+			msg := "invalid fields"
+			log.Print(msg)
+			http.Error(w, msg, http.StatusBadRequest)
+			return
+		}
+
+		accessCookie, _ := r.Cookie(string(CookieAccess))
+		accessToken, claims := parseToken(CookieAccess, accessCookie)
+
+		if accessToken == nil {
+			http.Error(w, "auth required", http.StatusUnauthorized)
+			return
+		}
+
+		var user User
+
+		if result := db.Where("username = ?", claims.Subject).First(&user); result.Error != nil {
+			msg := "data error"
+			code := http.StatusInternalServerError
+
+			if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+				msg = "invalid auth"
+				code = http.StatusBadRequest
+			}
+
+			http.Error(w, msg, code)
+			return
+		}
+
+		ruleArgs := auth.RuleArgs{
+			User:  user.Username,
+			Owner: reqUsername,
+		}
+
+		if granted := auth.Access(user.Role, auth.ResAcct, auth.PermUpdate, ruleArgs); !granted {
+			log.Printf("access denied for %v to %v", auth.ResAcct, user.Username)
+			http.Error(w, "access denied", http.StatusForbidden)
+			return
+		}
+
+		if len(prefUpdates) > 0 {
+			if result := db.Model(&Preferences{}).Where("user = ?", reqUsername).Updates(prefUpdates); result.Error != nil {
+				http.Error(w, "unable to update user", http.StatusInternalServerError)
+				return
+			}
+		}
+
+		if len(updates) > 0 {
+			if result := db.Model(&User{}).Where("username = ?", reqUsername).Updates(updates); result.Error != nil {
+				http.Error(w, "unable to update user", http.StatusInternalServerError)
+				return
+			}
+		}
+	}
+}

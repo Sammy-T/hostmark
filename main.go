@@ -76,6 +76,7 @@ func main() {
 
 	mux.HandleFunc("GET /api/account/me", handleGetMe())
 	mux.HandleFunc("GET /api/account/{username}", handleGetUser())
+	mux.HandleFunc("POST /api/account/{username}", handleUpdateUser())
 	mux.HandleFunc("GET /api/account/list", handleGetUsers())
 
 	addr := ":3000"
