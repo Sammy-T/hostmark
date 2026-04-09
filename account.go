@@ -25,7 +25,7 @@ func handleGetMe() http.HandlerFunc {
 
 		var user User
 
-		if result := db.Where("username = ?", claims.Subject).First(&user); result.Error != nil {
+		if result := db.Preload("Prefs").Where("username = ?", claims.Subject).First(&user); result.Error != nil {
 			msg := "data error"
 			code := http.StatusInternalServerError
 
@@ -100,7 +100,7 @@ func handleGetUser() http.HandlerFunc {
 
 		var reqUser User
 
-		if result := db.Where("username = ?", reqUsername).First(&reqUser); result.Error != nil {
+		if result := db.Preload("Prefs").Where("username = ?", reqUsername).First(&reqUser); result.Error != nil {
 			msg := "data error"
 			code := http.StatusInternalServerError
 
