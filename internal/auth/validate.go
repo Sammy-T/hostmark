@@ -15,6 +15,10 @@ func IsValidPassword(password string) bool {
 	return passwordRe.MatchString(password)
 }
 
+func IsValidRole(role string) bool {
+	return slices.Contains([]Role{RoleUser, RoleAdmin}, Role(role))
+}
+
 func IsValidVisibility(visibility string) bool {
 	return slices.Contains([]string{"public", "protected", "private"}, visibility)
 }

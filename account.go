@@ -1,12 +1,15 @@
 package main
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"log"
 	"net/http"
 
 	"github.com/sammy-t/hostmark/internal/auth"
+	"github.com/sammy-t/hostmark/pwd"
+	"golang.org/x/crypto/argon2"
 	"gorm.io/gorm"
 )
 
@@ -177,7 +180,8 @@ func handleGetUsers() http.HandlerFunc {
 
 func handleUpdateUser() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if err := r.ParseForm(); err != nil {
+		var err error
+		if err = r.ParseForm(); err != nil {
 			log.Printf("parse form: %v", err)
 			http.Error(w, "unable to parse request", http.StatusInternalServerError)
 			return
@@ -193,6 +197,30 @@ func handleUpdateUser() http.HandlerFunc {
 
 		updates := make(map[string]any)
 		prefUpdates := make(map[string]any)
+
+		var requiresAdmin bool // Certain fields require an admin to edit regardless of whether the user is editing their own account.
+
+		if role := r.PostForm.Get("role"); auth.IsValidRole(role) {
+			requiresAdmin = true
+			updates["role"] = role
+		}
+
+		if password := r.PostForm.Get("password"); auth.IsValidPassword(password) {
+			if err = pwd.CheckAgainstPwned(hmUserAgent, password, pwdThreshold); err != nil {
+				log.Print(err)
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+
+			s := pwd.GenerateRandBytes(saltLen)
+			h := argon2.IDKey([]byte(password), s, hashParams.Time, hashParams.Memory, hashParams.Threads, hashParams.KeyLen)
+
+			salt := base64.StdEncoding.EncodeToString(s)
+			hashed := base64.StdEncoding.EncodeToString(h)
+
+			updates["pwd_hash"] = hashed
+			updates["salt"] = salt
+		}
 
 		if visibility := r.PostForm.Get("default-visibility"); auth.IsValidVisibility(visibility) {
 			prefUpdates["note_vis"] = visibility
@@ -225,6 +253,12 @@ func handleUpdateUser() http.HandlerFunc {
 			}
 
 			http.Error(w, msg, code)
+			return
+		}
+
+		if requiresAdmin && user.Role != auth.RoleAdmin {
+			log.Printf("access denied for %v to %v", auth.ResAcct, user.Username)
+			http.Error(w, "access denied", http.StatusForbidden)
 			return
 		}
 

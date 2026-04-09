@@ -26,11 +26,14 @@ const (
 )
 
 var hmSecret string = "my-hostmark-secret" //// TODO: Load from env
+var hmUserAgent string = "hostmark.sammy-t"
 
 var accessDuration time.Duration = 2 * time.Minute
 var refreshDuration time.Duration = 5 * time.Minute
 var lockDuration time.Duration = 5 * time.Minute
 var authAttemptLimit int = 3
+var pwdThreshold int64 = 25
+var saltLen int = 32
 
 var hashParams pwd.HashParams = pwd.HashParams{
 	Time:    1,
@@ -65,7 +68,7 @@ func handleSignup() http.HandlerFunc {
 			return
 		}
 
-		if err = pwd.CheckAgainstPwned("hostmark.sammy-t", password, 25); err != nil {
+		if err = pwd.CheckAgainstPwned(hmUserAgent, password, pwdThreshold); err != nil {
 			log.Print(err)
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -83,7 +86,7 @@ func handleSignup() http.HandlerFunc {
 			return
 		}
 
-		s := pwd.GenerateRandBytes(32)
+		s := pwd.GenerateRandBytes(saltLen)
 		h := argon2.IDKey([]byte(password), s, hashParams.Time, hashParams.Memory, hashParams.Threads, hashParams.KeyLen)
 
 		salt := base64.StdEncoding.EncodeToString(s)
