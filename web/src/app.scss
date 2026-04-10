@@ -34,6 +34,11 @@ body {
     grid-template-rows: auto 1fr;
 }
 
+body:has(.auth) {
+    grid-template-rows: unset;
+    grid-template-columns: unset;
+}
+
 .page {
     display: flex;
     overflow: hidden;
