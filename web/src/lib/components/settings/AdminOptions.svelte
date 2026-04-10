@@ -22,6 +22,9 @@
     /** @type {EditUser} */
     let editUserDialog;
 
+    /** @type {DeleteUser} */
+    let delUserDialog;
+
     /** @type {AlertMessage} */
     let alertMsg;
     
@@ -46,13 +49,14 @@
      */
     function setDeleting(username) {
         editingUser = username;
+        delUserDialog.show();
     }
 
     /**
      * @param {number} status
      * @param {string} respText
      */
-    function onEditSubmitted(status, respText) {
+    function onSubmitted(status, respText) {
         editingUser = '';
 
         switch(status) {
@@ -160,8 +164,8 @@
     </table>
 </article>
 
-<EditUser mode={updateMode} username={editingUser} onsubmitted={onEditSubmitted} bind:this={editUserDialog} />
-<DeleteUser />
+<EditUser mode={updateMode} username={editingUser} onsubmitted={onSubmitted} bind:this={editUserDialog} />
+<DeleteUser username={editingUser} onsubmitted={onSubmitted} bind:this={delUserDialog} />
 
 <AlertMessage type="warning" heading="Error" bind:this={alertMsg}>
     {errText}

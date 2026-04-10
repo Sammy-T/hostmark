@@ -392,3 +392,66 @@ func handleUpdateUser() http.HandlerFunc {
 		}
 	}
 }
+
+func handleDelUser() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		reqUsername := r.PathValue("username")
+		if reqUsername == "" {
+			msg := "invalid user"
+			log.Print(msg)
+			http.Error(w, msg, http.StatusBadRequest)
+			return
+		}
+
+		var err error
+
+		if !auth.IsValidUsername(reqUsername) {
+			err = fmt.Errorf("invalid username")
+		}
+
+		if err != nil {
+			log.Print(err)
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		accessCookie, _ := r.Cookie(string(CookieAccess))
+		accessToken, claims := parseToken(CookieAccess, accessCookie)
+
+		if accessToken == nil {
+			http.Error(w, "auth required", http.StatusUnauthorized)
+			return
+		}
+
+		var user User
+
+		if result := db.Where("username = ?", claims.Subject).First(&user); result.Error != nil {
+			msg := "data error"
+			code := http.StatusInternalServerError
+
+			if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+				msg = "invalid auth"
+				code = http.StatusBadRequest
+			}
+
+			http.Error(w, msg, code)
+			return
+		}
+
+		ruleArgs := auth.RuleArgs{
+			User:  user.Username,
+			Owner: reqUsername,
+		}
+
+		if granted := auth.Access(user.Role, auth.ResAcct, auth.PermDelete, ruleArgs); !granted {
+			log.Printf("access denied for %v to %v", auth.ResAcct, user.Username)
+			http.Error(w, "access denied", http.StatusForbidden)
+			return
+		}
+
+		if result := db.Where("username = ?", reqUsername).Delete(&User{}); result.Error != nil {
+			http.Error(w, "unable to delete user", http.StatusInternalServerError)
+			return
+		}
+	}
+}
