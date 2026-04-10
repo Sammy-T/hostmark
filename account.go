@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -12,6 +13,109 @@ import (
 	"golang.org/x/crypto/argon2"
 	"gorm.io/gorm"
 )
+
+func handleCreateUser() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		err := r.ParseForm()
+		if err != nil {
+			log.Printf("parse form: %v", err)
+			http.Error(w, "unable to parse request", http.StatusInternalServerError)
+			return
+		}
+
+		username := r.PostForm.Get("username")
+		password := r.PostForm.Get("password")
+		role := r.PostForm.Get("role")
+
+		if !auth.IsValidRole(role) {
+			err = fmt.Errorf("invalid role")
+		}
+
+		if !auth.IsValidPassword(password) {
+			err = fmt.Errorf("invalid password")
+		}
+
+		if !auth.IsValidUsername(username) {
+			err = fmt.Errorf("invalid username")
+		}
+
+		if err != nil {
+			log.Print(err)
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		accessCookie, _ := r.Cookie(string(CookieAccess))
+		accessToken, claims := parseToken(CookieAccess, accessCookie)
+
+		if accessToken == nil {
+			http.Error(w, "auth required", http.StatusUnauthorized)
+			return
+		}
+
+		if err = pwd.CheckAgainstPwned(hmUserAgent, password, pwdThreshold); err != nil {
+			log.Print(err)
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		foundResult := db.Where("username = ?", username).Limit(1).Find(&User{})
+
+		if foundResult.Error != nil {
+			log.Printf("find user: %v", foundResult.Error)
+			http.Error(w, "data error", http.StatusInternalServerError)
+			return
+		} else if foundResult.RowsAffected != 0 {
+			log.Printf("username %q already exists", username)
+			http.Error(w, "invalid username", http.StatusBadRequest)
+			return
+		}
+
+		var user User
+
+		if result := db.Where("username = ?", claims.Subject).First(&user); result.Error != nil {
+			msg := "data error"
+			code := http.StatusInternalServerError
+
+			if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+				msg = "invalid auth"
+				code = http.StatusBadRequest
+			}
+
+			http.Error(w, msg, code)
+			return
+		}
+
+		ruleArgs := auth.RuleArgs{
+			User: user.Username,
+		}
+
+		if granted := auth.Access(user.Role, auth.ResAcct, auth.PermCreate, ruleArgs); !granted {
+			log.Printf("access denied for %v to %v", auth.ResAcct, user.Username)
+			http.Error(w, "access denied", http.StatusForbidden)
+			return
+		}
+
+		s := pwd.GenerateRandBytes(saltLen)
+		h := argon2.IDKey([]byte(password), s, hashParams.Time, hashParams.Memory, hashParams.Threads, hashParams.KeyLen)
+
+		salt := base64.StdEncoding.EncodeToString(s)
+		hashed := base64.StdEncoding.EncodeToString(h)
+
+		newUser := User{
+			Username: username,
+			PwdHash:  hashed,
+			Salt:     salt,
+			Role:     auth.Role(role),
+			Prefs:    Preferences{NoteVis: "private"},
+		}
+
+		if result := db.Create(&newUser); result.Error != nil {
+			http.Error(w, "unable to create user", http.StatusInternalServerError)
+			return
+		}
+	}
+}
 
 func handleGetMe() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {

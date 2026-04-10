@@ -15,6 +15,8 @@
     // @ts-ignore
     let users = $state([]);
 
+    let updateMode = $state('edit');
+
     let editingUser = $state('');
 
     /** @type {EditUser} */
@@ -25,10 +27,16 @@
     
     let errText = $state('');
 
+    function setCreating() {
+        updateMode = 'create';
+        editUserDialog.show();
+    }
+
     /**
      * @param {string} username
      */
     function setEditing(username) {
+        updateMode = 'edit';
         editingUser = username;
         editUserDialog.show();
     }
@@ -45,6 +53,8 @@
      * @param {string} respText
      */
     function onEditSubmitted(status, respText) {
+        editingUser = '';
+
         switch(status) {
             case 200:
                 loadUsers();
@@ -129,7 +139,7 @@
 <article>
     <header>
         <h3>Members</h3>
-        <button class="secondary">{@html icPlus} Create</button>
+        <button class="secondary" onclick={setCreating}>{@html icPlus} Create</button>
     </header>
 
     <table>
@@ -150,7 +160,7 @@
     </table>
 </article>
 
-<EditUser username={editingUser} onsubmitted={onEditSubmitted} bind:this={editUserDialog} />
+<EditUser mode={updateMode} username={editingUser} onsubmitted={onEditSubmitted} bind:this={editUserDialog} />
 <DeleteUser />
 
 <AlertMessage type="warning" heading="Error" bind:this={alertMsg}>

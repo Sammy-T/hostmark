@@ -74,6 +74,7 @@ func main() {
 
 	mux.HandleFunc("GET /api/tags", handleGetTags())
 
+	mux.HandleFunc("POST /api/account", handleCreateUser())
 	mux.HandleFunc("GET /api/account/me", handleGetMe())
 	mux.HandleFunc("GET /api/account/{username}", handleGetUser())
 	mux.HandleFunc("POST /api/account/{username}", handleUpdateUser())
