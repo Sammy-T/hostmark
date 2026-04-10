@@ -1,4 +1,7 @@
 <script>
+    import icHome from '$lib/assets/home.svg?raw';
+    import icPlus from '$lib/assets/plus.svg?raw';
+    import icFolder from '$lib/assets/folder.svg?raw';
     import Sidebar from '../Sidebar.svelte';
     import AlertMessage from '../AlertMessage.svelte';
     import { getContext } from 'svelte';
@@ -113,22 +116,27 @@
     }
 </script>
 
-{#snippet pathEntry(/** @type {string} */ href, /** @type {string} */ title)}
-    <li><a {href} onclick={onEntryClick}>{title}</a></li>
+{#snippet pathEntry(/** @type {string} */ href, /** @type {string} */ title, /** @type {string} */ icon = '')}
+    <li>
+        <a {href} onclick={onEntryClick}>
+            {#if icon}{@html icon} {/if}{title}
+        </a>
+    </li>
 {/snippet}
 
 <!-- Mobile file nav -->
 <Sidebar popId="mobile-file-nav" mobileOnly>
     <ul data-sveltekit-preload-data="off">
-        {@render pathEntry('/#[home]', '[home]')}
+        {@render pathEntry('/#[home]', 'home', icHome)}
         {@render pathEntry('/#[back]', '..')}
-        {@render pathEntry('/#[new]', '+new file')}
+        {@render pathEntry('/#[new]', 'new file', icPlus)}
 
         {#each entries as entry}
             {@const type = (entry.isDir) ? '' : '/file'}
             {@const href = (workingDir.value) ? [type, workingDir.value, entry.name].join('/') : [type, entry.name].join('/')}
+            {@const icon = (entry.isDir) ? icFolder : ''}
 
-            {@render pathEntry(href, `${entry.name}${entry.isDir ? '/' : ''}`)}
+            {@render pathEntry(href, entry.name, icon)}
         {/each}
     </ul>
 </Sidebar>
@@ -137,15 +145,16 @@
 <aside>
     <nav>
         <ul data-sveltekit-preload-data="off">
-            {@render pathEntry('/#[home]', '[home]')}
+            {@render pathEntry('/#[home]', 'home', icHome)}
             {@render pathEntry('/#[back]', '..')}
-            {@render pathEntry('/#[new]', '+new file')}
+            {@render pathEntry('/#[new]', 'new file', icPlus)}
 
             {#each entries as entry}
                 {@const type = (entry.isDir) ? '' : '/file'}
                 {@const href = (workingDir.value) ? [type, workingDir.value, entry.name].join('/') : [type, entry.name].join('/')}
+                {@const icon = (entry.isDir) ? icFolder : ''}
 
-                {@render pathEntry(href, `${entry.name}${entry.isDir ? '/' : ''}`)}
+                {@render pathEntry(href, entry.name, icon)}
             {/each}
         </ul>
     </nav>
@@ -174,6 +183,16 @@
 
         & a:hover {
             background-color: oklch(from var(--pico-contrast) l c h / 0.05);
+        }
+    }
+
+    li a {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+
+        & :global(svg) {
+            width: 1rem;
         }
     }
 
