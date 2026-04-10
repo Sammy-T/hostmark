@@ -27,12 +27,6 @@
 </dialog>
 
 <style>
-    .dialog-container {
-        padding: 1rem;
-        border: 2px solid var(--pico-muted-color);
-        border-radius: 1rem;
-    }
-
     .warning {
         color: var(--pico-form-element-invalid-focus-color);
     }

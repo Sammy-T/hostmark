@@ -1,9 +1,9 @@
 <script>
     import AlertMessage from '../AlertMessage.svelte';
     import { goto } from '$app/navigation';
-    import { PREFS_PROFILE_KEY } from '$lib/util.svelte';
+    import { STORAGE_PROFILE_KEY } from '$lib/util.svelte';
 
-    let prefs = $state(JSON.parse(localStorage.getItem(PREFS_PROFILE_KEY) ?? '')?.prefs);
+    let prefs = $state(JSON.parse(localStorage.getItem(STORAGE_PROFILE_KEY) ?? '')?.prefs);
 
     /** @type {AlertMessage} */
     let alertMsg;
@@ -18,7 +18,7 @@
         if(!resp.ok) return;
 
         const info = await resp.text();
-        localStorage.setItem(PREFS_PROFILE_KEY, info);
+        localStorage.setItem(STORAGE_PROFILE_KEY, info);
 
         prefs = JSON.parse(info)?.prefs;
     }

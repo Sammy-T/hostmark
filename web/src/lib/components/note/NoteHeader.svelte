@@ -5,7 +5,7 @@
     import { goto } from '$app/navigation';
     import { getContext } from 'svelte';
     import { SvelteSet } from 'svelte/reactivity';
-    import { PREFS_PROFILE_KEY } from '$lib/util.svelte';
+    import { STORAGE_PROFILE_KEY } from '$lib/util.svelte';
 
     let value = $state('');
 
@@ -20,7 +20,7 @@
 
     let formTags = $derived(new SvelteSet(tags));
 
-    let prefs = JSON.parse(localStorage.getItem(PREFS_PROFILE_KEY) ?? '')?.prefs;
+    let prefs = JSON.parse(localStorage.getItem(STORAGE_PROFILE_KEY) ?? '')?.prefs;
 
     /** @type {HTMLFormElement} */
     let form;

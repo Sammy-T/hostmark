@@ -1,7 +1,7 @@
 <script>
     import AlertMessage from '$lib/components/AlertMessage.svelte';
     import { goto } from '$app/navigation';
-    import { PREFS_PROFILE_KEY } from '$lib/util.svelte';
+    import { STORAGE_PROFILE_KEY } from '$lib/util.svelte';
 
     /** @type {AlertMessage} */
     let alertMsg;
@@ -39,7 +39,7 @@
         }
 
         const userInfo = await resp.text();
-        localStorage.setItem(PREFS_PROFILE_KEY, userInfo);
+        localStorage.setItem(STORAGE_PROFILE_KEY, userInfo);
 
         goto('/');
     }

@@ -3,9 +3,102 @@
     import icMore from '$lib/assets/dots-vertical.svg?raw';
     import icEdit from '$lib/assets/edit.svg?raw';
     import icDelete from '$lib/assets/trash.svg?raw';
-</script>
+    import EditUser from './dialog/EditUser.svelte';
+    import DeleteUser from './dialog/DeleteUser.svelte';
+    import AlertMessage from '../AlertMessage.svelte';
+    import { goto } from '$app/navigation';
+    import { onMount } from 'svelte';
+    import { STORAGE_PROFILE_KEY } from '$lib/util.svelte';
 
-<h2>Admin</h2>
+    let userInfo = JSON.parse(localStorage.getItem(STORAGE_PROFILE_KEY) ?? '');
+
+    // @ts-ignore
+    let users = $state([]);
+
+    let editingUser = $state('');
+
+    /** @type {EditUser} */
+    let editUserDialog;
+
+    /** @type {AlertMessage} */
+    let alertMsg;
+    
+    let errText = $state('');
+
+    /**
+     * @param {string} username
+     */
+    function setEditing(username) {
+        editingUser = username;
+        editUserDialog.show();
+    }
+
+    /**
+     * @param {string} username
+     */
+    function setDeleting(username) {
+        editingUser = username;
+    }
+
+    /**
+     * @param {number} status
+     * @param {string} respText
+     */
+    function onEditSubmitted(status, respText) {
+        switch(status) {
+            case 200:
+                loadUsers();
+                break;
+
+            default:
+                errText = respText;
+                alertMsg.show();
+        }
+    }
+
+    async function loadUsers() {
+        const resp = await fetch('/api/account/list');
+
+        switch(resp.status) {
+            case 200:
+                break;
+            
+            case 401:
+                const refResp = await fetch('/api/auth/refresh');
+
+                switch(refResp.status) {
+                    case 200:
+                        loadUsers();
+                        return;
+
+                    case 400:
+                    case 401:
+                        goto('/login');
+                        return;
+
+                    default:
+                        errText = await refResp.text();
+                        console.error(errText, refResp.status);
+
+                        alertMsg.show();
+                        return;
+                }
+            
+            default:
+                errText = await resp.text();
+                console.error(errText, resp.status);
+                
+                alertMsg.show();
+        }
+
+        const data = await resp.json();
+        users = data;
+    }
+
+    onMount(() => {
+        loadUsers();
+    });
+</script>
 
 {#snippet memberRow(/** @type {String} */ username, /** @type {String} */ role, isSelf = false)}
 <tr>
@@ -22,14 +115,16 @@
 
             <div id={menuId} popover>
                 <div class="menu-container">
-                    <button popovertarget={menuId}>{@html icEdit} Edit</button>
-                    <button popovertarget={menuId}>{@html icDelete} Delete</button>
+                    <button popovertarget={menuId} popovertargetaction="hide" onclick={() => setEditing(username)}>{@html icEdit} Edit</button>
+                    <button popovertarget={menuId} popovertargetaction="hide" onclick={() => setDeleting(username)}>{@html icDelete} Delete</button>
                 </div>
             </div>
         </td>
     {/if}
 </tr>
 {/snippet}
+
+<h2>Admin</h2>
 
 <article>
     <header>
@@ -46,15 +141,21 @@
             </tr>
         </thead>
         <tbody>
-            {#each { length: 5 } as _, i}
-                {@const role = (i === 0) ? 'admin' : 'user'}
-                {@const isAdmin = (i === 0)}
+            {#each users as user (user.username)}
+                {@const isAdmin = user.username === userInfo?.username}
 
-                {@render memberRow(`user-${i}`, role, isAdmin)}
+                {@render memberRow(user.username, user.role, isAdmin)}                
             {/each}
         </tbody>
     </table>
 </article>
+
+<EditUser username={editingUser} onsubmitted={onEditSubmitted} bind:this={editUserDialog} />
+<DeleteUser />
+
+<AlertMessage type="warning" heading="Error" bind:this={alertMsg}>
+    {errText}
+</AlertMessage>
 
 <style>
     [popover] {

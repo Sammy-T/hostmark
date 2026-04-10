@@ -1,1 +1,1 @@
-export const PREFS_PROFILE_KEY = 'hm-profile';
+export const STORAGE_PROFILE_KEY = 'hm-profile';

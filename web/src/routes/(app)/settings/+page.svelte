@@ -1,11 +1,17 @@
 <script>
     import AccountOptions from '$lib/components/settings/AccountOptions.svelte';
     import AdminOptions from '$lib/components/settings/AdminOptions.svelte';
+    import { STORAGE_PROFILE_KEY } from '$lib/util.svelte';
+
+    let userInfo = JSON.parse(localStorage?.getItem(STORAGE_PROFILE_KEY) ?? '');
 </script>
 
 <div class="page">
     <AccountOptions />
-    <AdminOptions />
+
+    {#if userInfo?.role === 'admin'}
+        <AdminOptions />
+    {/if}
 </div>
 
 <style>
