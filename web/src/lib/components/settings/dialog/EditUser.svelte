@@ -105,6 +105,7 @@
             <select id="role" name="role" required={mode === 'create'}>
                 <option value="" selected={mode === 'edit'}></option>
                 <option value="user" selected={mode === 'create'}>User</option>
+                <option value="editor">Editor</option>
                 <option value="admin">Admin</option>
             </select>
 

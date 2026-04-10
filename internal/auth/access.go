@@ -3,9 +3,10 @@ package auth
 type Role string
 
 const (
-	RoleAdmin Role = "admin"
-	RoleUser  Role = "user"
-	RoleNone  Role = "none"
+	RoleAdmin  Role = "admin"
+	RoleEditor Role = "editor"
+	RoleUser   Role = "user"
+	RoleNone   Role = "none"
 )
 
 type Resource string

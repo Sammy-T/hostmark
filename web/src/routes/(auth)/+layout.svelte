@@ -9,10 +9,6 @@
 </main>
 
 <style>
-	main {
-		width: 100dvw;
-	}
-
 	div {
 		max-width: 500px;
 		height: 100dvh;
