@@ -2,7 +2,7 @@
 	let { children } = $props();
 </script>
 
-<main>
+<main class="auth">
 	<div>
 		{@render children()}
 	</div>

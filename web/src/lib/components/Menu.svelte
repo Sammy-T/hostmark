@@ -11,6 +11,7 @@
     import icFilter from '$lib/assets/filter-2.svg?raw';
     import Sidebar from './Sidebar.svelte';
     import { page } from '$app/state';
+    import { goto } from '$app/navigation';
 
     let current = $derived((page.url.pathname === '/') ? 'file' : page.url.pathname.split('/').filter((v) => v !== '').at(0));
 
@@ -47,6 +48,13 @@
             };
         });
     }
+
+    async function logout() {
+        const resp = await fetch('/api/auth/logout');
+        if(!resp.ok) return;
+
+        goto('/login');
+    }
 </script>
 
 <!-- Mobile menu -->
@@ -79,7 +87,7 @@
     
     <ul data-sveltekit-preload-data="off">
         <li><a href="/settings">{@html icSettings} Settings</a></li>
-        <li><a href="#">{@html icSignout} Sign out</a></li>
+        <li><a href="#logout" onclick={logout}>{@html icSignout} Sign out</a></li>
     </ul>
 </Sidebar>
 
@@ -94,7 +102,7 @@
     
     <ul data-sveltekit-preload-data="off">
         <li><a href="/settings" class:highlight={current === 'settings'} use:delayedTip={{ title: 'Settings' }}>{@html icSettings}</a></li>
-        <li><a href="#" class:highlight={current === 'signout'} use:delayedTip={{ title: 'Sign out' }}>{@html icSignout}</a></li>
+        <li><a href="#logout" onclick={logout} class:highlight={current === 'signout'} use:delayedTip={{ title: 'Sign out' }}>{@html icSignout}</a></li>
     </ul>
 </Sidebar>
 
