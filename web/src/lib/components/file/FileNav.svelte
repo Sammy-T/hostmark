@@ -124,8 +124,7 @@
     </li>
 {/snippet}
 
-<!-- Mobile file nav -->
-<Sidebar popId="mobile-file-nav" mobileOnly>
+{#snippet paths()}
     <ul data-sveltekit-preload-data="off">
         {@render pathEntry('/#[home]', 'home', icHome)}
         {@render pathEntry('/#[back]', '..')}
@@ -139,24 +138,17 @@
             {@render pathEntry(href, entry.name, icon)}
         {/each}
     </ul>
+{/snippet}
+
+<!-- Mobile file nav -->
+<Sidebar popId="mobile-file-nav" mobileOnly>
+    {@render paths()}
 </Sidebar>
 
 <!-- Desktop file nav -->
 <aside>
     <nav>
-        <ul data-sveltekit-preload-data="off">
-            {@render pathEntry('/#[home]', 'home', icHome)}
-            {@render pathEntry('/#[back]', '..')}
-            {@render pathEntry('/#[new]', 'new file', icPlus)}
-
-            {#each entries as entry}
-                {@const type = (entry.isDir) ? '' : '/file'}
-                {@const href = (workingDir.value) ? [type, workingDir.value, entry.name].join('/') : [type, entry.name].join('/')}
-                {@const icon = (entry.isDir) ? icFolder : ''}
-
-                {@render pathEntry(href, entry.name, icon)}
-            {/each}
-        </ul>
+        {@render paths()}
     </nav>
 </aside>
 
