@@ -12,6 +12,8 @@
     import { getContext } from 'svelte';
     import { goto } from '$app/navigation';
 
+    marked.use({ gfm: true });
+
     let { note } = $props();
 
     /** @type {import('svelte/reactivity').SvelteSet<string>} */

@@ -2,6 +2,8 @@ import { goto } from '$app/navigation';
 import { error } from '@sveltejs/kit';
 import { marked } from 'marked';
 
+marked.use({ gfm: true });
+
 export const ssr = false
 
 export async function load({ fetch, params }) {
