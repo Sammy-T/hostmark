@@ -1,7 +1,10 @@
 package main
 
 import (
+	_ "embed"
+	"errors"
 	"flag"
+	"io/fs"
 	"log"
 	"net/http"
 	"os"
@@ -12,6 +15,9 @@ import (
 	httpExt "github.com/sammy-t/hostmark/internal/http"
 	"gorm.io/gorm"
 )
+
+//go:embed template/readme.md
+var readmeBytes []byte
 
 var dev bool
 var db *gorm.DB
@@ -29,6 +35,26 @@ func init() {
 	}
 
 	db.AutoMigrate(&User{}, &FailedLogin{}, &LockedToken{}, &RefreshToken{}, &Tag{}, &Note{}, &Preferences{})
+
+	// Init the readme file
+	cwDir, err := os.Getwd()
+	if err != nil {
+		log.Fatalf("Current working directory: %v", err)
+	}
+
+	p := filepath.Join(cwDir, filesDir, "readme.md")
+	if _, err = os.Stat(p); !errors.Is(err, fs.ErrNotExist) {
+		return
+	}
+
+	if err = os.MkdirAll(filepath.Dir(p), 0755); err != nil {
+		log.Printf("mkdir all: %v", err)
+		return
+	}
+
+	if err = os.WriteFile(p, readmeBytes, 0644); err != nil {
+		log.Printf("write file: %v", err)
+	}
 }
 
 func main() {

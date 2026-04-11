@@ -14,6 +14,8 @@ import (
 	"gorm.io/gorm"
 )
 
+const filesDir string = ".files"
+
 type PathEntry struct {
 	Name  string `json:"name"`
 	IsDir bool   `json:"isDir"`
@@ -57,7 +59,7 @@ func handleDirPath(cwDir string) http.HandlerFunc {
 
 		urlPath := r.PathValue("path")
 
-		entries, err := os.ReadDir(filepath.Join(cwDir, ".files", urlPath))
+		entries, err := os.ReadDir(filepath.Join(cwDir, filesDir, urlPath))
 		if err != nil {
 			log.Printf("read dir: %v", err)
 			http.Error(w, "unable to read directory", http.StatusInternalServerError)
@@ -124,7 +126,7 @@ func handleGetPath(cwDir string) http.HandlerFunc {
 
 		urlPath := r.PathValue("path")
 
-		p := filepath.Join(cwDir, ".files", urlPath)
+		p := filepath.Join(cwDir, filesDir, urlPath)
 
 		info, err := os.Stat(p)
 		if err != nil {
@@ -206,7 +208,7 @@ func handlePostPath(cwDir string) http.HandlerFunc {
 			return
 		}
 
-		p := filepath.Join(cwDir, ".files", urlPath)
+		p := filepath.Join(cwDir, filesDir, urlPath)
 
 		if err = os.MkdirAll(filepath.Dir(p), 0755); err != nil {
 			log.Printf("mkdir all: %v", err)
@@ -260,7 +262,7 @@ func handleDelPath(cwDir string) http.HandlerFunc {
 
 		urlPath := r.PathValue("path")
 
-		if err := os.Remove(filepath.Join(cwDir, ".files", urlPath)); err != nil {
+		if err := os.Remove(filepath.Join(cwDir, filesDir, urlPath)); err != nil {
 			log.Printf("remove file: %v", err)
 			http.Error(w, "unable to remove file", http.StatusInternalServerError)
 			return
