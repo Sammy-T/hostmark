@@ -9,10 +9,11 @@
     import icTagFilled from '$lib/assets/tag-filled.svg?raw';
     import AlertMessage from '../AlertMessage.svelte';
     import { marked } from 'marked';
+    import markedAlert from 'marked-alert';
     import { getContext } from 'svelte';
     import { goto } from '$app/navigation';
 
-    marked.use({ gfm: true });
+    marked.use({ gfm: true }, markedAlert());
 
     let { note } = $props();
 

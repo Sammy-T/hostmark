@@ -11,6 +11,10 @@ a {
     text-decoration: none;
 }
 
+li:has(input[type="checkbox"]) {
+    list-style: none;
+}
+
 dialog {
     width: revert-layer;
     min-width: revert-layer;
@@ -48,6 +52,46 @@ body:has(.auth) {
     padding: 1rem;
     border: 2px solid var(--pico-muted-color);
     border-radius: 1rem;
+}
+
+
+
+.markdown-alert {
+    padding: 0.15rem 1rem;
+    margin-bottom: 1rem;
+    border-left: 3px solid var(--alert-color);
+    --alert-color: var(--pico-muted-color);
+
+    & > *:last-child {
+        margin-bottom: 0;
+    }
+}
+
+.markdown-alert-title {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--alert-color);
+}
+
+.markdown-alert-note {
+    --alert-color: rgb(81, 123, 221);
+}
+
+.markdown-alert-tip {
+    --alert-color: rgb(49, 197, 49);
+}
+
+.markdown-alert-warning {
+    --alert-color: rgb(245, 178, 54);
+}
+
+.markdown-alert-caution {
+    --alert-color: rgb(255, 76, 76);
+}
+
+.markdown-alert-important {
+    --alert-color: rgb(168, 69, 168);
 }
 
 @media (min-width: 768px) {

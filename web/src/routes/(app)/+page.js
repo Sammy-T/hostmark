@@ -1,8 +1,9 @@
 import { goto } from '$app/navigation';
 import { error } from '@sveltejs/kit';
 import { marked } from 'marked';
+import markedAlert from 'marked-alert';
 
-marked.use({ gfm: true });
+marked.use({ gfm: true }, markedAlert());
 
 export const ssr = false
 
