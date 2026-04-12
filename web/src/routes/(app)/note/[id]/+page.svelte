@@ -3,4 +3,13 @@
     import { page } from '$app/state';
 </script>
 
-<Note note={page.data.note} />
+<div>
+    <Note note={page.data.note} />
+</div>
+
+<style>
+    div {
+        height: 100dvh;
+        overflow: auto;
+    }
+</style>
