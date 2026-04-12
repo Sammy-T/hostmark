@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/glebarez/sqlite"
+	"github.com/joho/godotenv"
 	httpExt "github.com/sammy-t/hostmark/internal/http"
 	"gorm.io/gorm"
 )
@@ -22,8 +23,18 @@ var readmeBytes []byte
 var dev bool
 var db *gorm.DB
 
+var hmSecret string
+
 func init() {
 	var err error
+
+	if err = godotenv.Load(); err != nil {
+		log.Fatalf("load env: %v", err)
+	}
+
+	if hmSecret = os.Getenv("HM_SECRET"); hmSecret == "" {
+		log.Fatal("missing 'HM_SECRET'")
+	}
 
 	cfg := &gorm.Config{
 		TranslateError: true,
