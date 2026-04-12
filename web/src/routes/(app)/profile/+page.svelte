@@ -7,6 +7,7 @@
     import { page } from '$app/state';
     import { goto } from '$app/navigation';
     import { onMount, setContext } from 'svelte';
+    import { PAGE_SIZE } from '$lib/util.svelte';
 
     let info = $derived(page.data);
 
@@ -16,8 +17,6 @@
     let showLoadNext = $state({ value: false });
 
     let pagesLoaded = $state({ value: 0 });
-
-    const pageSize = 5; //// TODO: TEMP
 
     let wasAuthed = false;
 
@@ -45,7 +44,7 @@
         const url = new URL('/api/note/list', location.origin);
 
         url.searchParams.set('username', info.username);
-        url.searchParams.append('page_size', pageSize.toString());
+        url.searchParams.append('page_size', PAGE_SIZE.toString());
         if(page > 0) url.searchParams.append('page', page.toString());
 
         let resp = await fetch(url);
@@ -85,7 +84,7 @@
             pagesLoaded.value = (page > 0) ? page : 1;
         }
 
-        showLoadNext.value = respNotes.length === pageSize;
+        showLoadNext.value = respNotes.length === PAGE_SIZE;
     }
 
     onMount(() => {
