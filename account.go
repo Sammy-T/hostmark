@@ -299,10 +299,21 @@ func handleUpdateUser() http.HandlerFunc {
 			return
 		}
 
+		accessCookie, _ := r.Cookie(string(CookieAccess))
+		accessToken, claims := parseToken(CookieAccess, accessCookie)
+
+		if accessToken == nil {
+			http.Error(w, "auth required", http.StatusUnauthorized)
+			return
+		}
+
 		updates := make(map[string]any)
 		prefUpdates := make(map[string]any)
 
 		var requiresAdmin bool // Certain fields require an admin to edit regardless of whether the user is editing their own account.
+		var requiresPwd bool   // Updating the current account's password requires the existing password
+
+		currentPwd := r.PostForm.Get("current-password")
 
 		if role := r.PostForm.Get("role"); auth.IsValidRole(role) {
 			requiresAdmin = true
@@ -310,6 +321,9 @@ func handleUpdateUser() http.HandlerFunc {
 		}
 
 		if password := r.PostForm.Get("password"); auth.IsValidPassword(password) {
+			requiresAdmin = requiresAdmin || reqUsername != claims.Subject
+			requiresPwd = reqUsername == claims.Subject
+
 			if err = pwd.CheckAgainstPwned(hmUserAgent, password, pwdThreshold); err != nil {
 				log.Print(err)
 				http.Error(w, err.Error(), http.StatusBadRequest)
@@ -326,6 +340,12 @@ func handleUpdateUser() http.HandlerFunc {
 			updates["salt"] = salt
 		}
 
+		if requiresPwd && !auth.IsValidPassword(currentPwd) {
+			log.Print("invalid password")
+			http.Error(w, "invalid credentials", http.StatusBadRequest)
+			return
+		}
+
 		if visibility := r.PostForm.Get("default-visibility"); auth.IsValidVisibility(visibility) {
 			prefUpdates["note_vis"] = visibility
 		}
@@ -334,14 +354,6 @@ func handleUpdateUser() http.HandlerFunc {
 			msg := "invalid fields"
 			log.Print(msg)
 			http.Error(w, msg, http.StatusBadRequest)
-			return
-		}
-
-		accessCookie, _ := r.Cookie(string(CookieAccess))
-		accessToken, claims := parseToken(CookieAccess, accessCookie)
-
-		if accessToken == nil {
-			http.Error(w, "auth required", http.StatusUnauthorized)
 			return
 		}
 
@@ -364,6 +376,25 @@ func handleUpdateUser() http.HandlerFunc {
 			log.Printf("access denied for %v to %v", auth.ResAcct, user.Username)
 			http.Error(w, "access denied", http.StatusForbidden)
 			return
+		}
+
+		if requiresPwd {
+			s, err := base64.StdEncoding.DecodeString(user.Salt)
+			if err != nil {
+				log.Print(err)
+				http.Error(w, "data error", http.StatusInternalServerError)
+				return
+			}
+
+			h := argon2.IDKey([]byte(currentPwd), s, hashParams.Time, hashParams.Memory, hashParams.Threads, hashParams.KeyLen)
+
+			hashed := base64.StdEncoding.EncodeToString(h)
+
+			if hashed != user.PwdHash {
+				log.Print("invalid password")
+				http.Error(w, "invalid credentials", http.StatusBadRequest)
+				return
+			}
 		}
 
 		ruleArgs := auth.RuleArgs{

@@ -1,9 +1,13 @@
 <script>
+    import UpdatePwd from './dialog/UpdatePwd.svelte';
     import AlertMessage from '../AlertMessage.svelte';
     import { goto } from '$app/navigation';
     import { STORAGE_PROFILE_KEY } from '$lib/util.svelte';
 
     let prefs = $state(JSON.parse(localStorage.getItem(STORAGE_PROFILE_KEY) ?? '')?.prefs);
+
+    /** @type {UpdatePwd} */
+    let updatePwdDialog;
 
     /** @type {AlertMessage} */
     let alertMsg;
@@ -12,6 +16,10 @@
 
     /** @type {Promise<Response>?} */
     let updateReq = $state(null);
+
+    function showUpdatePwd() {
+        updatePwdDialog.show();
+    }
 
     async function loadUser() {
         let resp = await fetch(`/api/account/me`);
@@ -81,6 +89,21 @@
                 alertMsg.show();
         }
     }
+
+    /**
+     * @param {number} status
+     * @param {string} respText
+     */
+    function onPwdSubmitted(status, respText) {
+        switch(status) {
+            case 200:
+                break;
+
+            default:
+                errText = respText;
+                alertMsg.show();
+        }
+    }
 </script>
 
 <h2>Account</h2>
@@ -102,7 +125,13 @@
             <button type="submit" class="secondary">Save</button>
         {/await}
     </form>
+
+    <hr>
+
+    <button class="secondary" onclick={showUpdatePwd}>Update password</button>
 </article>
+
+<UpdatePwd username={prefs?.user} onsubmitted={onPwdSubmitted} bind:this={updatePwdDialog} />
 
 <AlertMessage type="warning" heading="Error" bind:this={alertMsg}>
     {errText}
