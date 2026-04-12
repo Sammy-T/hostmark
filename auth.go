@@ -74,16 +74,30 @@ func handleSignup() http.HandlerFunc {
 			return
 		}
 
-		foundResult := db.Where("username = ?", username).Limit(1).Find(&User{})
+		var count int64
 
-		if foundResult.Error != nil {
-			log.Printf("find user: %v", foundResult.Error)
+		if result := db.Model(&User{}).Count(&count); result.Error != nil {
+			log.Printf("find user: %v", result.Error)
 			http.Error(w, "data error", http.StatusInternalServerError)
-			return
-		} else if foundResult.RowsAffected != 0 {
-			log.Printf("username %q already exists", username)
-			http.Error(w, "invalid username", http.StatusBadRequest)
-			return
+		}
+
+		role := auth.RoleUser
+
+		if count == 0 {
+			log.Printf("creating admin %q", username)
+			role = auth.RoleAdmin
+		} else {
+			foundResult := db.Where("username = ?", username).Limit(1).Find(&User{})
+
+			if foundResult.Error != nil {
+				log.Printf("find user: %v", foundResult.Error)
+				http.Error(w, "data error", http.StatusInternalServerError)
+				return
+			} else if foundResult.RowsAffected != 0 {
+				log.Printf("username %q already exists", username)
+				http.Error(w, "invalid username", http.StatusBadRequest)
+				return
+			}
 		}
 
 		s := pwd.GenerateRandBytes(saltLen)
@@ -96,6 +110,7 @@ func handleSignup() http.HandlerFunc {
 			Username: username,
 			PwdHash:  hashed,
 			Salt:     salt,
+			Role:     role,
 			Prefs:    Preferences{NoteVis: "private"},
 		}
 
