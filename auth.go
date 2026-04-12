@@ -25,12 +25,11 @@ const (
 	CookieDevice  CookieName = "client_dev"
 )
 
-var hmSecret string = "my-hostmark-secret" //// TODO: Load from env
 var hmUserAgent string = "hostmark.sammy-t"
 
-var accessDuration time.Duration = 2 * time.Minute
-var refreshDuration time.Duration = 5 * time.Minute
-var lockDuration time.Duration = 5 * time.Minute
+var accessDuration time.Duration = 15 * time.Minute
+var refreshDuration time.Duration = 3 * time.Hour
+var lockDuration time.Duration = 1 * time.Hour
 var authAttemptLimit int = 3
 var pwdThreshold int64 = 25
 var saltLen int = 32
