@@ -29,7 +29,7 @@ dialog::backdrop {
 }
 
 body {
-    width: min(100dvw, 1536px);
+    width: min(100dvw, 1920px);
     height: 100dvh;
     margin: auto;
     outline: 1px solid oklch(from var(--pico-contrast) l c h / 0.15);
