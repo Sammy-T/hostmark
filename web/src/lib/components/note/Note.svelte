@@ -3,6 +3,7 @@
     import icProtected from '$lib/assets/users.svg?raw';
     import icPrivate from '$lib/assets/lock.svg?raw';
     import icMore from '$lib/assets/dots-vertical.svg?raw';
+    import icLink from '$lib/assets/link.svg?raw';
     import icEdit from '$lib/assets/edit.svg?raw';
     import icTrash from '$lib/assets/trash.svg?raw';
     import icTag from '$lib/assets/tag.svg?raw';
@@ -142,6 +143,20 @@
 
     }
 
+    async function copyLink() {
+        try {
+            await navigator.clipboard.writeText(`${location.origin}/note/${note.id}`);
+        } catch(error) {
+            // @ts-ignore
+            const { message } = error;
+
+            errText = message;
+            console.error(message);
+
+            alertMsg.show();
+        }
+    }
+
     function toggleEditing() {
         editing = !editing;
     }
@@ -183,6 +198,7 @@
 
             <div id={menuId} popover>
                 <div class="menu-container">
+                    <button popovertarget={menuId} onclick={copyLink}>{@html icLink} Copy link</button>
                     <button popovertarget={menuId} onclick={toggleEditing}>{@html icEdit} Edit</button>
                     <button popovertarget={menuId} onclick={deleteNote}>{@html icTrash} Delete</button>
                 </div>
