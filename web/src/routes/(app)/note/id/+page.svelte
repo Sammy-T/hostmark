@@ -1,37 +1,31 @@
 <script>
-    import FileView from '$lib/components/FileView.svelte';
+    import Note from '$lib/components/note/Note.svelte';
     import AlertMessage from '$lib/components/AlertMessage.svelte';
-    import { onMount } from 'svelte';
     import { goto } from '$app/navigation';
-    import { marked } from 'marked';
-    import markedAlert from 'marked-alert';
+    import { onMount } from 'svelte';
 
-    marked.use({ gfm: true }, markedAlert());
+    let noteId = $state('');
 
-    let markdown = $state('');
-    let html = $state('');
+    let note = $state();
 
     /** @type {AlertMessage} */
     let alertMsg;
     
     let errText = $state('');
 
-    async function loadReadme() {
-        let resp = await fetch(`/api/file/readme.md`);
+    async function loadNote() {
+        let resp = await fetch(`/api/note/${noteId}`);
 
         switch(resp.status) {
             case 200:
                 break;
-            
-            case 400:
-                return;
-            
+
             case 401:
                 const refResp = await fetch('/api/auth/refresh');
-            
+
                 switch(refResp.status) {
                     case 200:
-                        resp = await fetch(`/api/file/readme.md`);
+                        resp = await fetch(`/api/note/${noteId}`);
                         if(!resp.ok) {
                             errText = await resp.text();
                             console.error(errText, resp.status);
@@ -40,21 +34,21 @@
                             return;
                         }
                         break;
-                    
+
                     case 400:
                     case 401:
                         goto('/login');
                         return;
-                    
+
                     default:
                         errText = await refResp.text();
                         console.error(errText, refResp.status);
 
                         alertMsg.show();
-                        return;
+                        return
                 }
                 break;
-            
+
             default:
                 errText = await resp.text();
                 console.error(errText, resp.status);
@@ -63,17 +57,36 @@
                 return;
         }
 
-        markdown = await resp.text();
-        html = await marked.parse(markdown);
+        note = await resp.json();
     }
 
     onMount(() => {
-        loadReadme();
+        noteId = location.href.split('/note/').at(-1) ?? '';
+        loadNote();
     });
 </script>
 
-<FileView file="readme.md" {markdown} {html} />
+<div class="page">
+    <div class="note-container">
+        {#if note}
+            <Note {note} />
+        {/if}
+    </div>
+</div>
 
 <AlertMessage type="warning" heading="Error" bind:this={alertMsg}>
     {errText}
 </AlertMessage>
+
+<style>
+    .page {
+        height: 100%;
+        padding: 1rem;
+        overflow: auto;
+        justify-content: center;
+    }
+
+    .note-container {
+        width: min(100%, 1000px);
+    }
+</style>

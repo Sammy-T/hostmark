@@ -5,11 +5,17 @@
     import FileNone from './file/FileNone.svelte';
     import AlertMessage from './AlertMessage.svelte';
     import { setContext } from 'svelte';
-    import { page } from '$app/state';
     import { goto, refreshAll } from '$app/navigation';
 
-    let file = $derived(page.params.file);
-    let content = $derived(page.data.content);
+    /**
+     * @typedef {Object} Props
+     * @property {String} file
+     * @property {String} markdown
+     * @property {String} html
+     */
+
+    /** @type {Props} */
+    let { file, markdown, html } = $props();
 
     // svelte-ignore state_referenced_locally
     let workingDir = $state({ value: file?.split('/').filter((p) => !p.match(/\.\w+$/)).join('/') ?? '' });
@@ -22,7 +28,7 @@
     setContext('editing', editing);
 
     let editedFile = $derived(file);
-    let edited = $derived(content?.markdown);
+    let edited = $derived(markdown);
     let addingFile = $state(false);
 
     /** @type {AlertMessage} */
@@ -31,7 +37,7 @@
     let errText = $state('');
 
     $effect(() => {
-        if(naming.value || editing.value || !editedFile || (editedFile === file && edited === content?.markdown)) return;
+        if(naming.value || editing.value || !editedFile || (editedFile === file && edited === markdown)) return;
         submitChanges();
     });
 
@@ -126,12 +132,12 @@
     {/key}
 
     <div class="file-view">
-        {#if content}
+        {#if html}
             {#if file || naming.value}
-                <FileHeader bind:editedFile ondeletefile={deleteFile} />
+                <FileHeader {file} bind:editedFile ondeletefile={deleteFile} />
             {/if}
             
-            <FileEditor html={content?.html} bind:edited />
+            <FileEditor {html} bind:edited />
 
             {#if naming.value || editing.value}
                 <button class="secondary" onclick={finish}>finish</button>

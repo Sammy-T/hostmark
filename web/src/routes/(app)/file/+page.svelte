@@ -2,12 +2,13 @@
     import FileView from '$lib/components/FileView.svelte';
     import AlertMessage from '$lib/components/AlertMessage.svelte';
     import { onMount } from 'svelte';
-    import { goto } from '$app/navigation';
+    import { goto, onNavigate } from '$app/navigation';
     import { marked } from 'marked';
     import markedAlert from 'marked-alert';
 
     marked.use({ gfm: true }, markedAlert());
 
+    let file = $state('');
     let markdown = $state('');
     let html = $state('');
 
@@ -16,22 +17,26 @@
     
     let errText = $state('');
 
-    async function loadReadme() {
-        let resp = await fetch(`/api/file/readme.md`);
+    $effect(() => {
+        if(file) loadFile();
+    });
+
+    async function loadFile() {
+        let resp = await fetch(`/api/file/${file}`);
 
         switch(resp.status) {
             case 200:
                 break;
             
-            case 400:
-                return;
+            // case 400:
+            //     return;
             
             case 401:
                 const refResp = await fetch('/api/auth/refresh');
             
                 switch(refResp.status) {
                     case 200:
-                        resp = await fetch(`/api/file/readme.md`);
+                        resp = await fetch(`/api/file/${file}`);
                         if(!resp.ok) {
                             errText = await resp.text();
                             console.error(errText, resp.status);
@@ -67,12 +72,16 @@
         html = await marked.parse(markdown);
     }
 
+    onNavigate(() => {
+        file = location.href.split('/file/').at(-1) ?? '';
+    });
+
     onMount(() => {
-        loadReadme();
+        file = location.href.split('/file/').at(-1) ?? '';
     });
 </script>
 
-<FileView file="readme.md" {markdown} {html} />
+<FileView {file} {markdown} {html} />
 
 <AlertMessage type="warning" heading="Error" bind:this={alertMsg}>
     {errText}

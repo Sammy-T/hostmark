@@ -4,7 +4,13 @@ import adapter from '@sveltejs/adapter-static';
 const config = {
 	kit: {
 		// See https://svelte.dev/docs/kit/adapters for more information about adapters.
-		adapter: adapter()
+		adapter: adapter(),
+		prerender: {
+			handleMissingId: 'warn',
+		},
+		paths: {
+			relative: false,
+		},
 	}
 };
 

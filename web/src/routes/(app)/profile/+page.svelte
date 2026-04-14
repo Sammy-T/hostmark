@@ -4,12 +4,11 @@
     import NoteNone from '$lib/components/note/NoteNone.svelte';
     import LoadNext from '$lib/components/LoadNext.svelte';
     import AlertMessage from '$lib/components/AlertMessage.svelte';
-    import { page } from '$app/state';
     import { goto } from '$app/navigation';
     import { onMount, setContext } from 'svelte';
     import { PAGE_SIZE } from '$lib/util.svelte';
 
-    let info = $derived(page.data);
+    let info = $state();
 
     /** @type {{ value: { id: number }[] }}*/
     let notes = $state({ value: [] });
@@ -87,7 +86,58 @@
         showLoadNext.value = respNotes.length === PAGE_SIZE;
     }
 
-    onMount(() => {
+    async function loadUser() {
+        let resp = await fetch(`/api/account/me`);
+
+        switch(resp.status) {
+            case 200:
+                break;
+
+            case 400:
+                return;
+
+            case 401:
+                const refResp = await fetch('/api/auth/refresh');
+
+                switch(refResp.status) {
+                    case 200:
+                        resp = await fetch(`/api/account/me`);
+                        if(!resp.ok) {
+                            errText = await resp.text();
+                            console.error(errText, resp.status);
+
+                            alertMsg.show();
+                            return;
+                        }
+                        break;
+
+                    case 400:
+                    case 401:
+                        goto('/login');
+                        return;
+
+                    default:
+                        errText = await refResp.text();
+                        console.error(errText, refResp.status);
+
+                        alertMsg.show();
+                        return
+                }
+                break;
+
+            default:
+                errText = await resp.text();
+                console.error(errText, resp.status);
+
+                alertMsg.show();
+                return;
+        }
+
+        info = await resp.json();
+    }
+
+    onMount(async () => {
+        await loadUser();
         loadNotes();
     });
 </script>
@@ -98,11 +148,13 @@
             {@html icProfile}
         </div>
         
-        <div id="info">
-            <h4>{info.username}</h4>
-            <p>{info.role}</p>
-            <p class="muted">created {new Intl.DateTimeFormat().format(new Date(info.created_at))}</p>
-        </div>
+        {#if info}
+            <div id="info">
+                <h4>{info.username}</h4>
+                <p>{info.role}</p>
+                <p class="muted">created {new Intl.DateTimeFormat().format(new Date(info.created_at))}</p>
+            </div>
+        {/if}
     </section>
 
     <section class="notes">

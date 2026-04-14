@@ -3,7 +3,6 @@
     import icPencil from '$lib/assets/pencil.svg?raw';
     import icEdit from '$lib/assets/edit.svg?raw';
     import icTrash from '$lib/assets/trash.svg?raw';
-    import { page } from '$app/state';
     import { getContext } from 'svelte';
 
     /**
@@ -12,14 +11,13 @@
 
     /**
      * @typedef {Object} Props
+     * @property {String} file
      * @property {String} [editedFile]
      * @property {onDeleteFile} [ondeletefile]
      */
 
     /** @type {Props} */
-    let { editedFile = $bindable(), ondeletefile } = $props();
-
-    let file = $derived(page.params.file);
+    let { file, editedFile = $bindable(), ondeletefile } = $props();
 
     /** @type {{ value: boolean }} */
     const editing = getContext('editing');

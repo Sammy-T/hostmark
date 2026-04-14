@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 )
 
 func startDevServer(pkgManager string, cwDir string) {
@@ -62,14 +63,22 @@ func createDevHandler() http.Handler {
 	}
 
 	rewrite := func(r *httputil.ProxyRequest) {
-		// log.Printf("proxy req path %q", r.In.URL.String())
+		log.Printf("proxy req path %q", r.In.URL.String())
 
-		if r.In.URL.Path == "/auth" {
-			// Can't directly set r.Out.URL here for some reason
-			// even though it's a pointer
+		// Can't directly set r.Out.URL here for some reason
+		// even though it's a pointer
+		switch {
+		case strings.HasPrefix(r.In.URL.Path, "/file/") && strings.HasSuffix(r.In.URL.Path, ".md"):
 			r.Out.URL.Scheme = devUrl.Scheme
 			r.Out.URL.Host = devUrl.Host
-			r.Out.URL.Path = "/login"
+			r.Out.URL.Path = "/file"
+
+			log.Printf("%q => %q %q", r.In.URL.String(), r.Out.URL.String(), r.Out.URL.Path)
+			return
+		case strings.HasPrefix(r.In.URL.Path, "/note/"):
+			r.Out.URL.Scheme = devUrl.Scheme
+			r.Out.URL.Host = devUrl.Host
+			r.Out.URL.Path = "/note/id"
 
 			log.Printf("%q => %q %q", r.In.URL.String(), r.Out.URL.String(), r.Out.URL.Path)
 			return

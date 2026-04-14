@@ -88,8 +88,11 @@ func main() {
 		fs := httpExt.FileSys{FileSystem: http.Dir(filepath.Join(cwDir, "/web/build"))}
 
 		mux.Handle("/", http.FileServer(fs))
-		mux.HandleFunc("/auth", func(w http.ResponseWriter, r *http.Request) {
-			http.ServeFile(w, r, filepath.Join(cwDir, "/web/build/login.html"))
+		mux.HandleFunc("/file/{path...}", func(w http.ResponseWriter, r *http.Request) {
+			http.ServeFile(w, r, filepath.Join(cwDir, "/web/build/file.html"))
+		})
+		mux.HandleFunc("/note/{id}", func(w http.ResponseWriter, r *http.Request) {
+			http.ServeFile(w, r, filepath.Join(cwDir, "/web/build/note/id.html"))
 		})
 	}
 

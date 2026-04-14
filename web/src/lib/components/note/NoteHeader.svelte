@@ -3,7 +3,7 @@
     import icPlus from '$lib/assets/plus.svg?raw';
     import AlertMessage from '../AlertMessage.svelte';
     import { goto } from '$app/navigation';
-    import { getContext } from 'svelte';
+    import { getContext, onMount } from 'svelte';
     import { SvelteSet } from 'svelte/reactivity';
     import { STORAGE_PROFILE_KEY } from '$lib/util.svelte';
 
@@ -20,7 +20,7 @@
 
     let formTags = $derived(new SvelteSet(tags));
 
-    let prefs = JSON.parse(localStorage.getItem(STORAGE_PROFILE_KEY) ?? '')?.prefs;
+    let prefs = $state();
 
     /** @type {HTMLFormElement} */
     let form;
@@ -109,6 +109,10 @@
                 console.error('unable to submit note');
         }
     }
+
+    onMount(() => {
+        prefs = JSON.parse(localStorage.getItem(STORAGE_PROFILE_KEY) ?? '')?.prefs;
+    });
 </script>
 
 {#snippet tagItem(/** @type {string} */ tag)}

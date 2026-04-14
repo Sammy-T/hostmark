@@ -10,7 +10,7 @@
     import { onMount } from 'svelte';
     import { STORAGE_PROFILE_KEY } from '$lib/util.svelte';
 
-    let userInfo = JSON.parse(localStorage.getItem(STORAGE_PROFILE_KEY) ?? '');
+    let userInfo = $state();
 
     // @ts-ignore
     let users = $state([]);
@@ -103,6 +103,7 @@
                 console.error(errText, resp.status);
                 
                 alertMsg.show();
+                return;
         }
 
         const data = await resp.json();
@@ -110,6 +111,7 @@
     }
 
     onMount(() => {
+        userInfo = JSON.parse(localStorage.getItem(STORAGE_PROFILE_KEY) ?? '')
         loadUsers();
     });
 </script>

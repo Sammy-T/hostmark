@@ -3,8 +3,9 @@
     import AlertMessage from '../AlertMessage.svelte';
     import { goto } from '$app/navigation';
     import { STORAGE_PROFILE_KEY } from '$lib/util.svelte';
+    import { onMount } from 'svelte';
 
-    let prefs = $state(JSON.parse(localStorage.getItem(STORAGE_PROFILE_KEY) ?? '')?.prefs);
+    let prefs = $state();
 
     /** @type {UpdatePwd} */
     let updatePwdDialog;
@@ -104,6 +105,10 @@
                 alertMsg.show();
         }
     }
+
+    onMount(() => {
+        prefs = JSON.parse(localStorage.getItem(STORAGE_PROFILE_KEY) ?? '')?.prefs
+    });
 </script>
 
 <h2>Account</h2>
