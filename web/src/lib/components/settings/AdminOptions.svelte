@@ -83,20 +83,20 @@
                 switch(refResp.status) {
                     case 200:
                         loadUsers();
-                        return;
+                        break;
 
                     case 400:
                     case 401:
                         goto('/login');
-                        return;
+                        break;
 
                     default:
                         errText = await refResp.text();
                         console.error(errText, refResp.status);
 
                         alertMsg.show();
-                        return;
                 }
+                return;
             
             default:
                 errText = await resp.text();

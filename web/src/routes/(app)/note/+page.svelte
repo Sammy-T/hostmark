@@ -5,7 +5,7 @@
     import { SvelteSet } from 'svelte/reactivity';
     import { onMount, setContext } from 'svelte';
     import { goto } from '$app/navigation';
-    import { PAGE_SIZE } from '$lib/util.svelte';
+    import { PAGE_SIZE, STORAGE_WAS_AUTHED_KEY } from '$lib/util.svelte';
 
     let notes = $state({ value: [] });
     setContext('notes', notes);
@@ -26,8 +26,6 @@
 
     setContext('loadTags', loadTags);
     setContext('loadNotes', loadNotes);
-
-    let wasAuthed = false;
 
     /** @type {AlertMessage} */
     let alertMsg;
@@ -65,8 +63,10 @@
 
         const { notes: respNotes, authed } = await resp.json();
 
+        const wasAuthed = sessionStorage.getItem(STORAGE_WAS_AUTHED_KEY) === 'true';
+
         if(!authed && wasAuthed) {
-            wasAuthed = authed;
+            sessionStorage.setItem(STORAGE_WAS_AUTHED_KEY, authed.toString());
 
             const refResp = await fetch('/api/auth/refresh');
 
@@ -91,7 +91,7 @@
         }
 
         notes.value = (page > 0) ? [...notes.value, ...respNotes] : respNotes;
-        wasAuthed = authed;
+        sessionStorage.setItem(STORAGE_WAS_AUTHED_KEY, authed.toString());
 
         if(respNotes.length > 0) {
             pagesLoaded.value = (page > 0) ? page : 1;

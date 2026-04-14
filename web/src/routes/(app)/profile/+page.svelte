@@ -93,37 +93,26 @@
             case 200:
                 break;
 
-            case 400:
-                return;
-
             case 401:
                 const refResp = await fetch('/api/auth/refresh');
 
                 switch(refResp.status) {
                     case 200:
-                        resp = await fetch(`/api/account/me`);
-                        if(!resp.ok) {
-                            errText = await resp.text();
-                            console.error(errText, resp.status);
-
-                            alertMsg.show();
-                            return;
-                        }
+                        loadUser();
                         break;
 
                     case 400:
                     case 401:
                         goto('/login');
-                        return;
+                        break;
 
                     default:
                         errText = await refResp.text();
                         console.error(errText, refResp.status);
 
                         alertMsg.show();
-                        return
                 }
-                break;
+                return;
 
             default:
                 errText = await resp.text();
@@ -134,11 +123,11 @@
         }
 
         info = await resp.json();
+        loadNotes();
     }
 
-    onMount(async () => {
-        await loadUser();
-        loadNotes();
+    onMount(() => {
+        loadUser();
     });
 </script>
 

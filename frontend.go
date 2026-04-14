@@ -63,7 +63,7 @@ func createDevHandler() http.Handler {
 	}
 
 	rewrite := func(r *httputil.ProxyRequest) {
-		log.Printf("proxy req path %q", r.In.URL.String())
+		// log.Printf("proxy req path %q", r.In.URL.String())
 
 		// Can't directly set r.Out.URL here for some reason
 		// even though it's a pointer

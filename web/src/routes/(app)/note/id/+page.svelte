@@ -25,29 +25,21 @@
 
                 switch(refResp.status) {
                     case 200:
-                        resp = await fetch(`/api/note/${noteId}`);
-                        if(!resp.ok) {
-                            errText = await resp.text();
-                            console.error(errText, resp.status);
-
-                            alertMsg.show();
-                            return;
-                        }
+                        loadNote();
                         break;
 
                     case 400:
                     case 401:
                         goto('/login');
-                        return;
+                        break;
 
                     default:
                         errText = await refResp.text();
                         console.error(errText, refResp.status);
 
                         alertMsg.show();
-                        return
                 }
-                break;
+                return;
 
             default:
                 errText = await resp.text();
