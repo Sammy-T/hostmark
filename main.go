@@ -124,7 +124,7 @@ func main() {
 	addr := ":3000"
 
 	log.Printf("Serving hostmark on %v", addr)
-	log.Fatal(http.ListenAndServe(addr, logRequest(mux)))
+	log.Fatal(http.ListenAndServe(addr, logRequest(http.NewCrossOriginProtection().Handler(mux))))
 }
 
 // logRequest is middleware to log incoming request information.
