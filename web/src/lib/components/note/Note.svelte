@@ -208,7 +208,7 @@
 
     {#if editing}
         <form onsubmit={onSubmitEdit}>
-            <textarea name="content">{note.content}</textarea>
+            <textarea name="content" rows="10">{note.content}</textarea>
             <button type="submit">Save</button>
         </form>
     {:else}
