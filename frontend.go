@@ -68,7 +68,7 @@ func createDevHandler() http.Handler {
 		// Can't directly set r.Out.URL here for some reason
 		// even though it's a pointer
 		switch {
-		case strings.HasPrefix(r.In.URL.Path, "/file/") && strings.HasSuffix(r.In.URL.Path, ".md"):
+		case strings.HasPrefix(r.In.URL.Path, "/file/"):
 			r.Out.URL.Scheme = devUrl.Scheme
 			r.Out.URL.Host = devUrl.Host
 			r.Out.URL.Path = "/file"

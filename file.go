@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/sammy-t/hostmark/internal/auth"
 	"gorm.io/gorm"
@@ -69,6 +70,10 @@ func handleDirPath(cwDir string) http.HandlerFunc {
 		var pathEntries []PathEntry
 
 		for _, entry := range entries {
+			if containsDotFile(entry.Name()) {
+				continue
+			}
+
 			p := PathEntry{
 				Name:  entry.Name(),
 				IsDir: entry.IsDir(),
@@ -125,6 +130,12 @@ func handleGetPath(cwDir string) http.HandlerFunc {
 		}
 
 		urlPath := r.PathValue("path")
+
+		if containsDotFile(urlPath) {
+			log.Printf("requested ignored path %q", urlPath)
+			http.Error(w, "invalid path", http.StatusBadRequest)
+			return
+		}
 
 		p := filepath.Join(cwDir, filesDir, urlPath)
 
@@ -199,6 +210,12 @@ func handlePostPath(cwDir string) http.HandlerFunc {
 
 		urlPath := r.PathValue("path")
 
+		if containsDotFile(urlPath) {
+			log.Printf("requested ignored path %q", urlPath)
+			http.Error(w, "invalid path", http.StatusBadRequest)
+			return
+		}
+
 		body, err := io.ReadAll(r.Body)
 		r.Body.Close()
 
@@ -262,10 +279,28 @@ func handleDelPath(cwDir string) http.HandlerFunc {
 
 		urlPath := r.PathValue("path")
 
+		if containsDotFile(urlPath) {
+			log.Printf("requested ignored path %q", urlPath)
+			http.Error(w, "invalid path", http.StatusBadRequest)
+			return
+		}
+
 		if err := os.Remove(filepath.Join(cwDir, filesDir, urlPath)); err != nil {
 			log.Printf("remove file: %v", err)
 			http.Error(w, "unable to remove file", http.StatusInternalServerError)
 			return
 		}
 	}
+}
+
+// containsDotFile is a helper to determine if the names
+// of the file or its parent directories contain a leading dot.
+func containsDotFile(pathName string) bool {
+	for part := range strings.SplitSeq(pathName, "/") {
+		if strings.HasPrefix(part, ".") {
+			return true
+		}
+	}
+
+	return false
 }
