@@ -3,7 +3,6 @@ package main
 import (
 	_ "embed"
 	"errors"
-	"flag"
 	"io/fs"
 	"log"
 	"net/http"
@@ -13,14 +12,12 @@ import (
 
 	"github.com/glebarez/sqlite"
 	"github.com/joho/godotenv"
-	httpExt "github.com/sammy-t/hostmark/internal/http"
 	"gorm.io/gorm"
 )
 
 //go:embed template/readme.md
 var readmeBytes []byte
 
-var dev bool
 var db *gorm.DB
 
 var hmSecret string
@@ -69,9 +66,6 @@ func init() {
 }
 
 func main() {
-	flag.BoolVar(&dev, "dev", false, "development mode")
-	flag.Parse()
-
 	cwDir, err := os.Getwd()
 	if err != nil {
 		log.Fatalf("Current working directory: %v", err)
@@ -79,22 +73,7 @@ func main() {
 
 	mux := http.NewServeMux()
 
-	if dev {
-		startDevServer("pnpm", cwDir)
-		mux.Handle("/", createDevHandler())
-	} else {
-		buildSite("pnpm")
-
-		fs := httpExt.FileSys{FileSystem: http.Dir(filepath.Join(cwDir, "/web/build"))}
-
-		mux.Handle("/", http.FileServer(fs))
-		mux.HandleFunc("/file/{path...}", func(w http.ResponseWriter, r *http.Request) {
-			http.ServeFile(w, r, filepath.Join(cwDir, "/web/build/file.html"))
-		})
-		mux.HandleFunc("/note/{id}", func(w http.ResponseWriter, r *http.Request) {
-			http.ServeFile(w, r, filepath.Join(cwDir, "/web/build/note/id.html"))
-		})
-	}
+	createFrontendHandlers(cwDir, mux)
 
 	mux.HandleFunc("POST /api/auth/signup", handleSignup())
 	mux.HandleFunc("POST /api/auth/login", handleLogin())
