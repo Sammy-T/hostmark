@@ -1,20 +1,20 @@
-package http
+package fs
 
 import (
+	"io/fs"
 	"log"
-	"net/http"
 	"regexp"
 )
 
-// FileSys embeds http.FileSystem to extend its functionality.
-type FileSys struct {
-	http.FileSystem
+// FS embeds fs.FS to extend its functionality.
+type FS struct {
+	fs.FS
 }
 
-// Open extends FileSys's http.FileSystem
+// Open extends FS's fs.FS
 // to include `/<dir-name>.html` matching
 // in addition to the default `/<dir-name>/index.html` matching.
-func (fs FileSys) Open(name string) (http.File, error) {
+func (fs FS) Open(name string) (fs.File, error) {
 	// log.Printf("file %q", name)
 
 	re := regexp.MustCompile(`\/[\w\-]+$`)
@@ -28,7 +28,7 @@ func (fs FileSys) Open(name string) (http.File, error) {
 		htmlName := name + ".html"
 		log.Printf("%q => %q", name, htmlName)
 
-		file, err := fs.FileSystem.Open(htmlName)
+		file, err := fs.FS.Open(htmlName)
 		if err != nil {
 			log.Printf("file %q: %v", htmlName, err)
 		} else {
@@ -36,7 +36,7 @@ func (fs FileSys) Open(name string) (http.File, error) {
 		}
 	}
 
-	file, err := fs.FileSystem.Open(name)
+	file, err := fs.FS.Open(name)
 	if err != nil {
 		log.Printf("file %q: %v", name, err)
 		return nil, err

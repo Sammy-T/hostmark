@@ -55,3 +55,6 @@ go.work
 
 # Database
 *.db
+
+# Built binary
+hostmark
