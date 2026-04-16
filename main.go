@@ -25,9 +25,7 @@ var hmSecret string
 func init() {
 	var err error
 
-	if err = godotenv.Load(); err != nil {
-		log.Fatalf("load env: %v", err)
-	}
+	godotenv.Load()
 
 	if hmSecret = os.Getenv("HM_SECRET"); hmSecret == "" {
 		log.Fatal("missing 'HM_SECRET'")
