@@ -31,6 +31,11 @@
 
         switch(resp.status) {
             case 200:
+                markdown = await resp.text();
+                html = await marked.parse(markdown);
+                break;
+
+            case 400:
                 break;
             
             case 401:
@@ -61,9 +66,6 @@
                 alertMsg.show();
                 return;
         }
-
-        markdown = await resp.text();
-        html = await marked.parse(markdown);
 
         loading = false;
     }

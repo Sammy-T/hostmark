@@ -5,7 +5,7 @@
     import FileNone from './file/FileNone.svelte';
     import AlertMessage from './AlertMessage.svelte';
     import { setContext } from 'svelte';
-    import { goto, refreshAll } from '$app/navigation';
+    import { goto } from '$app/navigation';
 
     /**
      * @typedef {Object} Props
@@ -54,7 +54,8 @@
         const success = await requestChange(`/api/file/${file}`, 'DELETE');
         if(!success) return;
 
-        goto(`/file/${workingDir.value}`);
+        const nextLocation = (workingDir.value !== '') ? `/file/${workingDir.value}` : '/';
+        goto(nextLocation);
     }
 
     /**
@@ -112,12 +113,9 @@
             if(!addingFile) await requestChange(`/api/file/${file}`, 'DELETE');
 
             addingFile = false;
-            
-            goto(`/file/${editedFile}`);
-            return;
         }
 
-        refreshAll();
+        goto(`/file/${editedFile}`);
     }
 
     function finish() {
@@ -132,7 +130,7 @@
     {/key}
 
     <div class="file-view">
-        {#if html}
+        {#if html || addingFile}
             {#if file || naming.value}
                 <FileHeader {file} bind:editedFile ondeletefile={deleteFile} />
             {/if}
