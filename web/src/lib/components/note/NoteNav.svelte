@@ -64,7 +64,7 @@
     aside {
         display: none;
         height: 100dvh;
-        max-width: 25dvw;
+        width: 15dvw;
         padding: 0.5rem;
         overflow: auto;
         outline: 1px solid oklch(from var(--pico-contrast) l c h / 0.15);
