@@ -76,7 +76,7 @@
     }
 </script>
 
-<dialog id="edit-user" closedby="any" onclose={onClose} bind:this={dialog}>
+<dialog id="update-pwd" closedby="any" onclose={onClose} bind:this={dialog}>
     <div class="dialog-container">
         <h3>Update password</h3>
 
@@ -93,7 +93,7 @@
             <input id="confirm" type="password" name="confirm" placeholder="Password" required bind:this={confirmPwd} oninput={validateConfirmPwd} />
 
             <footer>
-                <button type="button" class="secondary" commandfor="edit-user" command="close">Cancel</button>
+                <button type="button" class="secondary" commandfor="update-pwd" command="close">Cancel</button>
                 <button type="submit">Submit</button>
             </footer>
         </form>

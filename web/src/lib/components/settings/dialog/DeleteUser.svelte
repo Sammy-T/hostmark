@@ -41,7 +41,7 @@
         <h3>Delete {username}?</h3>
 
         <footer>
-            <button type="button" class="secondary" popovertarget="delete-user">Cancel</button>
+            <button type="button" class="secondary" commandfor="delete-user" command="close">Cancel</button>
             <button type="button" popovertarget="delete-user" onclick={onConfirm}>Confirm</button>
         </footer>
     </div>
