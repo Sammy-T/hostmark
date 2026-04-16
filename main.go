@@ -35,7 +35,7 @@ func init() {
 		TranslateError: true,
 	}
 
-	db, err = gorm.Open(sqlite.Open("hostmark.db"), cfg)
+	db, err = gorm.Open(sqlite.Open(".data/hostmark.db"), cfg)
 	if err != nil {
 		log.Fatal(err)
 	}
