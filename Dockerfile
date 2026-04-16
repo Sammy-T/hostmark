@@ -94,6 +94,7 @@ RUN addgroup -g 1000 -S appuser && \
 USER appuser
 
 RUN mkdir .data
+RUN mkdir .files
 
 # Copy the executable from the "build-go" stage.
 COPY --from=build-go /bin/server .
