@@ -26,9 +26,11 @@ A knowledge-base and notes app supporting markdown text.
 HM_SECRET="my-custom-hostmark-secret"
 ```
 
-2. Create a `.files` subdirectory inside your project directory if you want file access from the local filesystem.
+> [!IMPORTANT]
+> If you want local filesystem access to the app's markdown files,<br>
+> Create a `.files` subdirectory inside your project directory **before** creating and running the app container.
 
-3. Pull and run the container:
+2. Pull and run the container:
 
 ```bash
 # With local filesystem access
