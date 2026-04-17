@@ -17,10 +17,11 @@ type FS struct {
 func (fs FS) Open(name string) (fs.File, error) {
 	// log.Printf("file %q", name)
 
-	re := regexp.MustCompile(`\/[\w\-]+$`)
+	re := regexp.MustCompile(`^(\/?[\w\-]+)+$`)
 
 	// Attempt to open an html file matching the directory.
 	// i.e. /hello => /hello.html
+	// i.e. hello => hello.html
 	//
 	// By default, Go's FileServer supports directories containing index.html files.
 	// See: https://pkg.go.dev/net/http@go1.26.0#FileServer
