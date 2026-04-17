@@ -561,7 +561,7 @@ func createTokenCookie(name CookieName, username string) (cookie *http.Cookie, t
 		Value:    tokenJwt,
 		SameSite: http.SameSiteLaxMode,
 		HttpOnly: true,
-		Secure:   true,
+		Secure:   useSecureCookie,
 	}
 
 	switch name {

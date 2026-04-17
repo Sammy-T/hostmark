@@ -24,12 +24,13 @@ var readmeBytes []byte
 var db *gorm.DB
 
 var hmSecret string
+var useSecureCookie bool
 
 func init() {
 	const envPath = ".data/.env.local"
 	var err error
 
-	godotenv.Load(envPath)
+	godotenv.Load(".env", envPath)
 
 	// Init the db
 	cfg := &gorm.Config{
@@ -43,7 +44,7 @@ func init() {
 
 	db.AutoMigrate(&User{}, &FailedLogin{}, &LockedToken{}, &RefreshToken{}, &Tag{}, &Note{}, &Preferences{})
 
-	// Init env variable
+	// Init env variables
 	cwDir, err := os.Getwd()
 	if err != nil {
 		log.Fatalf("Current working directory: %v", err)
@@ -60,6 +61,8 @@ func init() {
 			log.Fatalf("missing 'HM_SECRET': %v", err)
 		}
 	}
+
+	useSecureCookie = os.Getenv("HM_USE_SEC_COOKIE") != "false" // Default to true if not found
 
 	// Init the readme file
 	p := filepath.Join(cwDir, filesDir, "readme.md")
