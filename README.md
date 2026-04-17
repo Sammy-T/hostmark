@@ -19,27 +19,20 @@ A knowledge-base and notes app supporting markdown text.
 
 ### Running with Docker
 
-1. Create a project directory containing a `.env` file:
-
-```.env
-# .env
-HM_SECRET="my-custom-hostmark-secret"
-```
-
 > [!IMPORTANT]
 > If you want local filesystem access to the app's markdown files,<br>
-> Create a `.files` subdirectory inside your project directory **before** creating and running the app container.
+> Create a `.files` subdirectory inside your current working directory **before** creating and running the app container.
 
-2. Pull and run the container:
+Create and run the container:
 
 ```bash
 # With local filesystem access
-docker run -d --restart=unless-stopped -p 4000:3000 --env-file .env --name hostmark -v .files:/app/.files:rw -v hm-data:/app/.data sammytd/hostmark
+docker run --restart=unless-stopped -d -p 4000:3000 --name hostmark -v .files:/app/.files:rw -v hm-data:/app/.data sammytd/hostmark
 ```
 
 ```bash
 # Without local filesystem access
-docker run -d --restart=unless-stopped -p 4000:3000 --env-file .env --name hostmark -v hm-files:/app/.files -v hm-data:/app/.data sammytd/hostmark
+docker run --restart=unless-stopped -d -p 4000:3000 --name hostmark -v hm-files:/app/.files -v hm-data:/app/.data sammytd/hostmark
 ```
 
 Then visit `http://localhost:4000`.
@@ -48,20 +41,13 @@ Then visit `http://localhost:4000`.
 
 | Option | Description |
 | --- | --- |
-| `-d, --detach` | Run the container in the background. |
 | `--restart` | The container restart policy. |
+| `-d, --detach` | Run the container in the background. |
 | `-p, --publish` | Publish the container's port to the host. The host port can be whichever available port you want.<br>`<host-port>:<container-port>` |
-| `--env-file` | Read in a file of environment variables. |
 | `--name` | The container name (optional) |
 | `-v, --volume` | A container volume for persistent data. |
 
 See <https://docs.docker.com/reference/cli/docker/container/run/> for full reference.
-
-### Environment Variables
-
-| Variable | Description |
-| --- | --- |
-| HM_SECRET | The secret used for hostmark's auth. |
 
 ## Development
 
@@ -72,8 +58,6 @@ Requirements:
 - [Node.js](https://nodejs.org/)
 - [pnpm](https://pnpm.io/)
 - [Go](https://go.dev/)
-
-Create a `.env` file in the project root with the required environment variables. See [environment variables](#environment-variables).
 
 #### Get go dependencies
 
@@ -93,8 +77,6 @@ Then visit `http://localhost:3000`.
 
 Requires [docker](https://www.docker.com/)
 
-Create a `.env` file in the project root with the required environment variables. See [environment variables](#environment-variables).
-
 #### Build the image
 
 ```bash
@@ -104,7 +86,7 @@ docker build -t my/hostmark .
 #### Create and run a container from the image
 
 ```bash
-docker run -d -p 4000:3000 --env-file .env --name my-hostmark -v .files:/app/.files:rw -v my-hm-data:/app/.data my/hostmark
+docker run -d -p 4000:3000 --name my-hostmark -v .files:/app/.files:rw -v my-hm-data:/app/.data my/hostmark
 ```
 
 Then visit your host machine's `http://localhost:4000`.

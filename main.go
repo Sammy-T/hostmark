@@ -2,7 +2,9 @@ package main
 
 import (
 	_ "embed"
+	"encoding/base64"
 	"errors"
+	"fmt"
 	"io/fs"
 	"log"
 	"net/http"
@@ -12,6 +14,7 @@ import (
 
 	"github.com/glebarez/sqlite"
 	"github.com/joho/godotenv"
+	"github.com/sammy-t/hostmark/pwd"
 	"gorm.io/gorm"
 )
 
@@ -23,14 +26,12 @@ var db *gorm.DB
 var hmSecret string
 
 func init() {
+	const envPath = ".data/.env.local"
 	var err error
 
-	godotenv.Load()
+	godotenv.Load(envPath)
 
-	if hmSecret = os.Getenv("HM_SECRET"); hmSecret == "" {
-		log.Fatal("missing 'HM_SECRET'")
-	}
-
+	// Init the db
 	cfg := &gorm.Config{
 		TranslateError: true,
 	}
@@ -42,12 +43,25 @@ func init() {
 
 	db.AutoMigrate(&User{}, &FailedLogin{}, &LockedToken{}, &RefreshToken{}, &Tag{}, &Note{}, &Preferences{})
 
-	// Init the readme file
+	// Init env variable
 	cwDir, err := os.Getwd()
 	if err != nil {
 		log.Fatalf("Current working directory: %v", err)
 	}
 
+	if hmSecret = os.Getenv("HM_SECRET"); hmSecret == "" {
+		s := pwd.GenerateRandBytes(32)
+		hmSecret = base64.StdEncoding.EncodeToString(s)
+
+		entry := fmt.Sprintf("HM_SECRET=\"%v\"\n", hmSecret)
+
+		ePath := filepath.Join(cwDir, envPath)
+		if err = os.WriteFile(ePath, []byte(entry), 0644); err != nil {
+			log.Fatalf("missing 'HM_SECRET': %v", err)
+		}
+	}
+
+	// Init the readme file
 	p := filepath.Join(cwDir, filesDir, "readme.md")
 	if _, err = os.Stat(p); !errors.Is(err, fs.ErrNotExist) {
 		return
