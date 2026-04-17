@@ -1,6 +1,8 @@
 # hostmark
 
-A knowledge-base and notes app supporting markdown text.
+A knowledge-base and notes app supporting markdown text and local file storage.
+
+Why am I using SvelteKit but using Go for routing? Because I wanted to.<br>Is it kind of weird to use them like that? Absolutely, but I did it anyway.
 
 ## Features
 
