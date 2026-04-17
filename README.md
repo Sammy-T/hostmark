@@ -27,12 +27,12 @@ Create and run the container:
 
 ```bash
 # With local filesystem access
-docker run --restart=unless-stopped -d -p 4000:3000 --name hostmark -v .files:/app/.files:rw -v hm-data:/app/.data sammytd/hostmark
+docker run --restart=unless-stopped -d -p 4000:3000 --name hostmark --env-file .env -v .files:/app/.files:rw -v hm-data:/app/.data sammytd/hostmark
 ```
 
 ```bash
 # Without local filesystem access
-docker run --restart=unless-stopped -d -p 4000:3000 --name hostmark -v hm-files:/app/.files -v hm-data:/app/.data sammytd/hostmark
+docker run --restart=unless-stopped -d -p 4000:3000 --name hostmark --env-file .env -v hm-files:/app/.files -v hm-data:/app/.data sammytd/hostmark
 ```
 
 Then visit `http://localhost:4000`.
@@ -45,9 +45,16 @@ Then visit `http://localhost:4000`.
 | `-d, --detach` | Run the container in the background. |
 | `-p, --publish` | Publish the container's port to the host. The host port can be whichever available port you want.<br>`<host-port>:<container-port>` |
 | `--name` | The container name (optional) |
+| `--env-file` | Read in a file of environment variables. (optional)<br>See [environment variables](#environment-variables). |
 | `-v, --volume` | A container volume for persistent data. |
 
 See <https://docs.docker.com/reference/cli/docker/container/run/> for full reference.
+
+### Environment Variables
+
+| Variable | Description | Default |
+| --- | --- | --- |
+| HM_USE_SEC_COOKIE | Whether to use the `Secure` attribute to limit auth cookies only to https connections.<br><br>**Note:** This is separate from the `HttpOnly` attribute which is always configured to prevent access to cookies from JavaScript. | true |
 
 ## Development
 
