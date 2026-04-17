@@ -11,9 +11,9 @@ A knowledge-base and notes app supporting markdown text.
   - Configurable privacy
   - Custom tags
 
-<img width="1920" height="909" alt="hm-screen-01" src="https://github.com/user-attachments/assets/337dcfc4-72fc-4b36-be9b-5a9ad162d99b" />
-<img width="1920" height="909" alt="hm-screen-02" src="https://github.com/user-attachments/assets/818fa282-81bc-4764-be34-be7b23103938" />
-<img width="1920" height="909" alt="hm-screen-03" src="https://github.com/user-attachments/assets/75c3d3e2-2bd9-46b2-b4a4-9c97d3ef454f" />
+<img width="1920" height="909" alt="hm-screen-01" src="https://github.com/user-attachments/assets/337dcfc4-72fc-4b36-be9b-5a9ad162d99b" /><br>
+<img width="1920" height="909" alt="hm-screen-02" src="https://github.com/user-attachments/assets/818fa282-81bc-4764-be34-be7b23103938" /><br>
+<img width="1920" height="909" alt="hm-screen-03" src="https://github.com/user-attachments/assets/75c3d3e2-2bd9-46b2-b4a4-9c97d3ef454f" /><br>
 
 ## Getting Started
 
