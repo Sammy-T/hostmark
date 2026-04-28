@@ -160,7 +160,8 @@
     aside {
         display: none;
         height: 100dvh;
-        width: 15dvw;
+        min-width: 15dvw;
+        max-width: 20dvw;
         overflow: auto;
         outline: 1px solid oklch(from var(--pico-contrast) l c h / 0.15);
 
