@@ -14,7 +14,7 @@
 	"devDependencies": {
 		"@picocss/pico": "^2.1.1",
 		"@sveltejs/adapter-static": "^3.0.10",
-		"@sveltejs/kit": "^2.69.0",
+		"@sveltejs/kit": "^2.69.1",
 		"@sveltejs/vite-plugin-svelte": "^7.1.2",
 		"marked": "^18.0.5",
 		"marked-alert": "^2.1.2",
