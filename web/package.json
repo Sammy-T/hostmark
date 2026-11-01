@@ -16,12 +16,12 @@
 		"@sveltejs/adapter-static": "^3.0.10",
 		"@sveltejs/kit": "^2.70.3",
 		"@sveltejs/vite-plugin-svelte": "^7.3.1",
-		"marked": "^18.0.14",
+		"marked": "^18.1.2",
 		"marked-alert": "^2.1.2",
-		"sass": "^1.105.0",
-		"svelte": "^5.57.1",
-		"svelte-check": "^4.7.6",
+		"sass": "^1.107.0",
+		"svelte": "^5.57.3",
+		"svelte-check": "^4.7.7",
 		"typescript": "^7.0.2",
-		"vite": "^8.3.3"
+		"vite": "^8.3.5"
 	}
 }
