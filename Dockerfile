@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
-ARG PNPM_VERSION=12.9.1
-ARG GO_VERSION=1.26.5
+ARG PNPM_VERSION=12.21.0
+ARG GO_VERSION=1.27.4
 
 ## Node
 ################################################################################
