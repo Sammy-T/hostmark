@@ -120,6 +120,7 @@
     [popover] {
         margin: 0;
         inset: auto;
+        position-anchor: auto;
         top: calc(anchor(bottom) + 0.25rem);
         right: anchor(right);
         border-width: 1px;
