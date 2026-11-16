@@ -14,14 +14,14 @@
 	"devDependencies": {
 		"@picocss/pico": "^2.1.1",
 		"@sveltejs/adapter-static": "^3.0.11",
-		"@sveltejs/kit": "^2.70.3",
+		"@sveltejs/kit": "^2.70.4",
 		"@sveltejs/vite-plugin-svelte": "^7.3.1",
-		"marked": "^18.1.2",
+		"marked": "^18.2.0",
 		"marked-alert": "^2.1.2",
-		"sass": "^1.107.0",
+		"sass": "^1.108.2",
 		"svelte": "^5.57.3",
-		"svelte-check": "^4.7.7",
+		"svelte-check": "^4.7.8",
 		"typescript": "^7.0.2",
-		"vite": "^8.3.5"
+		"vite": "^8.3.8"
 	}
 }
