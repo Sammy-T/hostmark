@@ -30,6 +30,7 @@
     [popover] {
         margin: 0;
         inset: auto;
+        position-anchor: auto;
         border: none;
     }
 

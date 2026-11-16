@@ -178,6 +178,7 @@
         margin: 0;
         inset: auto;
         border: none;
+        position-anchor: auto;
         top: calc(anchor(bottom) + 0.25rem);
         right: anchor(right);
         border: 1px solid oklch(from var(--pico-contrast) l c h / 0.15);
